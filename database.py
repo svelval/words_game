@@ -212,10 +212,6 @@ class CommonDatabase(Database):
         else:
             await self.update(table=table, columns=columns, values=values, condition=condition, connection=conn)
 
-    @property
-    def connection(self):
-        return self.__connection
-
 
 class LanguagesDatabase(Database):
     def __init__(self, *args, **kwargs):
