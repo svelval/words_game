@@ -114,27 +114,7 @@ class CommonDatabase(Database):
 
     async def get(self, table: str, columns: list = None, condition: str = None):
         result, conn = await self.filter(table=table, columns=columns, condition=condition, close_connection=False)
-        conn = await self._connection_pool.acquire()
-        if columns is None:
-            columns_list_str = "*"
-            async with conn.cursor() as cur:
-                await cur.execute(
-                    f"SELECT COUNT(*) as `count` FROM information_schema.columns WHERE table_name='{table}'")
-                columns_count = list(await cur.fetchall())[0][0]
-        else:
-            columns_list_str = ','.join('`' + str(item) + '`' for item in columns)
-            columns_count = len(columns)
-        db_command = f"SELECT {columns_list_str} FROM `{table}`"
-        if condition is not None:
-            db_command += f" WHERE {condition}"
-
-        async with conn.cursor() as cur:
-            await cur.execute(db_command)
-            result = list(await cur.fetchall())
         self.release_connection(conn)
-
-        if columns_count == 1:
-            result = np.asarray(result).reshape(-1).tolist()
         if len(result) == 0:
             raise ObjectDoesNotExist('No objects found')
         elif len(result) == 1:
