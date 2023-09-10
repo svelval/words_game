@@ -66,6 +66,16 @@ class Database(object):
         else:
             return result, conn
 
+    async def get(self, table: str, columns: list = None, condition: str = None):
+        result, conn = await self.filter(table=table, columns=columns, condition=condition, close_connection=False)
+        self.release_connection(conn)
+        if len(result) == 0:
+            raise ObjectDoesNotExist('No objects found')
+        elif len(result) == 1:
+            return result[0]
+        else:
+            raise MultipleObjectsExist('More than 1 objects found')
+
     async def join(self, main_table: str, joining_tables: list, conditions: list):
         joining_tables_len = len(joining_tables)
         conditions_len = len(conditions)
@@ -112,17 +122,6 @@ class CommonDatabase(Database):
                                  condition=exist_condition,
                                  close_connection=close_connection)
 
-    async def get(self, table: str, columns: list = None, condition: str = None):
-        result, conn = await self.filter(table=table, columns=columns, condition=condition, close_connection=False)
-        self.release_connection(conn)
-        if len(result) == 0:
-            raise ObjectDoesNotExist('No objects found')
-        elif len(result) == 1:
-            return result[0]
-        else:
-            raise MultipleObjectsExist('More than 1 objects found')
-        # self._connection_pool.release(conn)
-        # TODO: выдаются одинаковые соединения в pool'е. Нужно сделать так, чтобы при каждом запросе создавались разные соединения
 
     async def get_or_create(self, table: str, columns: list, values: list):
         # TODO: узнать, почему возникают проблемы с подключением к БД, если не подключиться предварительно через MySQL Workbench
