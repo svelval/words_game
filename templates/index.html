@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Наборщик слов
+{% endblock %}
+
+{% block body %}
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/index.css') }}">
+        <table id="invisible">
+             {% if is_authorized %}
+                 <tr id="userInfo">
+                     <td width="25px"><div id="userSign" style="background-color: {{ user_color }}">{{ first_letter }}</div></td><td id="nickname"><a href="{{ url_for('user', name=username) }}" class="white hover-underlined">{{ username }}</a></td><td id="exitButtonPlace"><a id="exitButton" class="control">Выйти</a></td>
+                 </tr>
+             {% endif %}
+             <tr>
+                  <td colspan="3">
+                      {% if is_authorized %}
+                          <div>
+                            <p><a href="/new_game" class="main-menu control">Создать комнату</a></p>
+                            <p><a href="/join_game" class="main-menu control">Присоединиться к комнате</a></p>
+                            <p><a href="/rate" class="main-menu control">Рейтинги</a></p>
+                          </div>
+                      {% else %}
+                        <p><a href="/login" class="main-menu control">Войти</a></p>
+                        <p><a href="/sing_up" class="main-menu control">Зарегистрироваться</a></p>
+                      {% endif %}
+                  </td>
+             </tr>
+        </table>
+{% endblock %}

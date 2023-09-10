@@ -1,0 +1,31 @@
+html, body {
+    background-image: url("/static/images/cells.jpg");
+    height:100%;
+    margin:0px;
+    padding:0px;
+    color: white;
+    font-family: "Arial", serif;
+}
+table {
+    height: 100%;
+    margin: auto;
+    background-color: #333366;
+}
+a.control {
+    border-radius: 15px;
+    text-decoration: none;
+    font-family: "Arial Black", serif;
+    text-transform: uppercase;
+}
+a.white {
+    color: white;
+}
+a.hover-underlined {
+    text-decoration-line: none;
+}
+a.hover-underlined:hover {
+    text-decoration-line: underline;
+}
+h1.white {
+    color: white;
+}

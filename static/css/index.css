@@ -1,0 +1,50 @@
+a.main-menu{
+    padding: 10px 15px;
+    color: #ffffff;
+    background: linear-gradient(to top,#ff008c,#ff41a5);
+}
+a.main-menu:hover {
+    background: linear-gradient(to top,#ff41a5,#ff008c);
+}
+a.main-menu:active {
+    padding: 7px 12px;
+}
+
+a#exitButton {
+    background: linear-gradient(to top, #be0000, #ff0000);
+    padding: 8px 12px;
+    font-size: 12px;
+    cursor: pointer;
+}
+a#exitButton:hover {
+    background: linear-gradient(to top, #ff0000, #be0000);
+}
+a#exitButton:active {
+    padding: 7px 12px;
+}
+
+/*значок пользователя*/
+div#userSign {
+    border:2px solid white;
+    border-radius: 400px;
+    text-align: center;
+    vertical-align: center
+}
+
+/*невидимая таблица*/
+
+    tr#userInfo {
+        background: #333366;
+        height: 50px;
+    }
+        td#nickname {
+            text-align: left;
+        }
+        td#exitButtonPlace {
+            text-align: right;
+        }
+
+p {
+    margin-bottom: 35px;
+    text-align: center;
+}

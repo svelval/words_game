@@ -1,0 +1,54 @@
+
+/*текст ошибки*/
+p.danger{
+    color: red;
+    font-size: 10px;
+}
+/*поле ввода*/
+input[data-state="normal"]{
+    /*background-image: none;*/
+    outline: none;
+}
+input[data-state="focused"]{
+    background-image: none;
+    border: #ff008c solid 2px;
+    outline: none;
+}
+input[data-state="wrong"]{
+    border: red solid 2px;
+    /*background-image: url("/assets/pictures/wrong.png");*/
+    background-size: 16px 16px;
+    background-position: right;
+    background-repeat: no-repeat;
+}
+input[data-state="correct"]{
+    border: #26c32e solid 2px;
+    /*background-image: none;*/
+    /*background-image: url("/assets/pictures/correct.png");*/
+    background-size: 16px 16px;
+    background-position: right;
+    background-repeat: no-repeat;
+}
+/*Кнопка "Войти"*/
+input[type="button"],
+input[type="submit"] {
+    background: linear-gradient(to top,#ff008c,#ff41a5);
+    font-family: Arial, serif;
+    color: white;
+    outline: none;
+}
+input[type="button"]:hover,
+input[type="submit"]:hover{
+    background: linear-gradient(to top,#ff41a5,#ff008c);
+}
+/*Выбор цвета*/
+input[type="color"] {
+    outline: none;
+    line-height: unset;
+    overflow: hidden;
+}
+
+/*Невидимая таблица*/
+td{
+    vertical-align: top;
+}
