@@ -36,7 +36,8 @@ class Database(object):
             self._connection_pool.close()
             await self._connection_pool.wait_closed()
 
-    async def filter(self, table: str, columns: list = None, condition: str = None, connection=None, close_connection=True):
+    async def filter(self, table: str, columns: list = None, condition: str = None,
+                     connection=None, close_connection=True, **kwargs):
         if connection is None:
             conn = await self._connection_pool.acquire()
         else:
@@ -50,8 +51,20 @@ class Database(object):
         else:
             columns_to_select = ','.join('`' + str(item) + '`' for item in columns)
             columns_count = len(columns)
+        join_tables = kwargs.get('join_tables')
+        join_conditions = kwargs.get('join_conditions')
+        join_command_part = ''
+        if join_tables is not None:
+            if join_conditions is None:
+                raise AttributeError('"join_tables" cannot be passed without "join_conditions"')
+            else:
+                if len(join_tables) != len(join_conditions):
+                    raise AttributeError('Lengths of "join_tables" and "join_conditions" must be the same')
+                else:
+                    for tab, cond in zip(join_tables, join_conditions):
+                        join_command_part += f'JOIN {tab} ON {cond}\n'
 
-        db_command = f"SELECT {columns_to_select} FROM `{table}`"
+        db_command = f"SELECT {columns_to_select} FROM `{table}`" + f' {join_command_part}'
         if condition is not None:
             db_command += f" WHERE {condition}"
         async with conn.cursor() as cur:
@@ -66,8 +79,8 @@ class Database(object):
         else:
             return result, conn
 
-    async def get(self, table: str, columns: list = None, condition: str = None):
-        result, conn = await self.filter(table=table, columns=columns, condition=condition, close_connection=False)
+    async def get(self, table: str, columns: list = None, condition: str = None, **kwargs):
+        result, conn = await self.filter(table=table, columns=columns, condition=condition, close_connection=False, **kwargs)
         self.release_connection(conn)
         if len(result) == 0:
             raise ObjectDoesNotExist('No objects found')
@@ -75,19 +88,6 @@ class Database(object):
             return result[0]
         else:
             raise MultipleObjectsExist('More than 1 objects found')
-
-    async def join(self, main_table: str, joining_tables: list, conditions: list):
-        joining_tables_len = len(joining_tables)
-        conditions_len = len(conditions)
-        if joining_tables_len != conditions_len:
-            raise AttributeError(f'Lengths of "joining_tables" ({joining_tables_len}) and "conditions" ({conditions_len}) must be the same')
-        join_command = ''
-        for table, condition in zip(joining_tables, conditions):
-            join_command += f'JOIN {table} ON {condition}\n'
-
-        async with self._connection_pool.acquire() as conn:
-            async with conn.cursor() as cur:
-                await cur.execute(f"")
 
 
 class CommonDatabase(Database):
@@ -122,13 +122,12 @@ class CommonDatabase(Database):
                                  condition=exist_condition,
                                  close_connection=close_connection)
 
-
-    async def get_or_create(self, table: str, columns: list, values: list):
+    async def get_or_create(self, table: str, columns: list, values: list, **kwargs):
         # TODO: узнать, почему возникают проблемы с подключением к БД, если не подключиться предварительно через MySQL Workbench
         found_objs, conn = await self.filter(table=table, columns=columns,
                                              condition=' AND '.join(
                                                  col + "=" + str(val) for col, val in zip(columns, values)),
-                                             close_connection=False)
+                                             close_connection=False, **kwargs)
         if len(found_objs) == 0:
             table_defaults = self._defaults.get(table)
             if table_defaults is not None:
