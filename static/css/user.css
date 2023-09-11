@@ -1,0 +1,13 @@
+img {
+    width: 16px;
+    height: 16px;
+}
+div.user_sign {
+    margin: auto;
+    width: 20px;
+}
+div.username_div {
+    background: rgba(255,255,255,0.3);
+    border-radius: 5px;
+    text-align: center;
+}
