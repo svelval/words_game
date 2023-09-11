@@ -6,10 +6,11 @@ html, body {
     color: white;
     font-family: "Arial", serif;
 }
-table {
+table#invisible {
     height: 100%;
     margin: auto;
     background-color: #333366;
+    width: 30%;
 }
 a.control {
     border-radius: 15px;
@@ -26,6 +27,15 @@ a.hover-underlined {
 a.hover-underlined:hover {
     text-decoration-line: underline;
 }
-h1.white {
+h5.white {
     color: white;
+}
+td.align-top {
+    vertical-align: top;
+}
+div.user_sign {
+    border:2px solid white;
+    border-radius: 400px;
+    text-align: center;
+    vertical-align: center
 }
