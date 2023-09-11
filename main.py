@@ -7,6 +7,7 @@ from quart import Quart, render_template, request, Response, redirect, url_for, 
 from checkers import is_authorized
 from constants import PATHS_WITHOUT_LOGIN
 from decorators import login_required
+from exceptions import ObjectNotFound
 from site_variables import db
 from database import ObjectDoesNotExist
 
@@ -104,7 +105,15 @@ async def user():
         abort(404)
 
     try:
-        creation_date, last_visit,
+        creation_date, last_visit, rating, \
+        user_color, description, privilege = await db.get(table='user',
+                                                          columns=['creation_date', 'last_visit', 'rating',
+                                                                   'sign_color', 'description', 'codename'],
+                                                          condition=f'name="{username}"',
+                                                          join_tables=['privilege'],
+                                                          join_conditions=['user.privilege=privilege.id'])
+    except ObjectDoesNotExist:
+        raise ObjectNotFound(obj=username, obj_name='Пользователя')
 
     if await is_authorized(request):
         username = request.cookies['username']
@@ -120,6 +129,11 @@ async def user():
 @app.errorhandler(404)
 async def not_found():
     return await render_template('404.html')
+
+
+@app.errorhandler(ObjectNotFound)
+async def obj_not_found(error):
+    return await render_template('460.html', obj_name=error.obj_name, obj=error.obj)
 
 
 @app.after_request
