@@ -66,7 +66,6 @@ async def login_post():
     except ValueError:
         return await render_template(template_name, **template_args)
 
-
     # if username is None:
     #     template_args['username_is_correct'] = False
     #     template_args['username_error'] = 'Укажите имя пользователя'
@@ -127,7 +126,7 @@ async def user():
 
 
 @app.errorhandler(404)
-async def not_found():
+async def not_found(e):
     return await render_template('404.html')
 
 
