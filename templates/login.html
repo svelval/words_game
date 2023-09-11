@@ -4,38 +4,39 @@
     Войти
 {% endblock %}
 
+{% block styles %}
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/login.css') }}">
+{% endblock %}
+
 {% block body %}
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/login.css') }}">
-        <table id="invisible">
-            <tr>
-                <td>
-                    <form action="" method="post">
-                        {% if not username_state %}
-                            {% set username_state = "normal" %}
-                        {% endif %}
-                        {% if not password_state %}
-                            {% set password_state = "normal" %}
-                        {% endif %}
-                        <div id="nameDiv">
-                            <p style="margin: 0">Имя<br>
-                                <input name="username" maxlength="15" data-state="{{ username_state }}" required></p>
-                            <p class="danger">{{ username_error }}</p>
-                        </div>
-                        <div id="passwordDiv">
-                            <p style="margin: 0">Пароль<br>
-                                <input name="password" type="password" data-state="{{ password_state }}" required></p>
-                            <p class="danger">{{ password_error }}</p>
+        <tr>
+            <td>
+                <form action="" method="post">
+                    {% if not username_state %}
+                        {% set username_state = "normal" %}
+                    {% endif %}
+                    {% if not password_state %}
+                        {% set password_state = "normal" %}
+                    {% endif %}
+                    <div id="nameDiv">
+                        <p style="margin: 0">Имя<br>
+                            <input name="username" maxlength="15" data-state="{{ username_state }}" required></p>
+                        <p class="danger">{{ username_error }}</p>
+                    </div>
+                    <div id="passwordDiv">
+                        <p style="margin: 0">Пароль<br>
+                            <input name="password" type="password" data-state="{{ password_state }}" required></p>
+                        <p class="danger">{{ password_error }}</p>
 
-                        </div>
-                        <input type="checkbox" name="show_password" id="showPass"><label for="showPass">Показать пароль</label>
-                        <br>
-                        <input type="checkbox" name="remember_password" id="remember"><label for="remember">Запомнить на 30 дней</label>
+                    </div>
+                    <input type="checkbox" name="show_password" id="showPass"><label for="showPass">Показать пароль</label>
+                    <br>
+                    <input type="checkbox" name="remember_password" id="remember"><label for="remember">Запомнить на 30 дней</label>
 
-                        <div id="submitDiv">
-                                <input type="submit" value="Войти" id="subButton">
-                        </div>
-                    </form>
-                </td>
-            </tr>
-        </table>
+                    <div id="submitDiv">
+                            <input type="submit" value="Войти" id="subButton">
+                    </div>
+                </form>
+            </td>
+        </tr>
 {% endblock %}
