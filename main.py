@@ -114,14 +114,16 @@ async def user():
     except ObjectDoesNotExist:
         raise ObjectNotFound(obj=username, obj_name='Пользователя')
 
-    if await is_authorized(request):
-        username = request.cookies['username']
-        user_color = await db.get(table='user', columns=['sign_color'], condition=f'name="{username}"')
-        username_first_letter = username[0].upper()
-        template_args['is_authorized'] = True
-        template_args['username'] = username
-        template_args['user_color'] = user_color
-        template_args['first_letter'] = username_first_letter
+    username_first_letter = username[0].upper()
+    template_args['username'] = username
+    template_args['creation_date'] = creation_date
+    template_args['last_visit'] = last_visit
+    template_args['rating'] = rating
+    template_args['user_color'] = user_color
+    template_args['description'] = description
+    template_args['privilege'] = privilege
+    template_args['first_letter'] = username_first_letter
+    print(template_args)
     return await render_template('user.html', **template_args)
 
 
