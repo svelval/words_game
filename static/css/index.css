@@ -23,14 +23,6 @@ a#exitButton:active {
     padding: 7px 12px;
 }
 
-/*значок пользователя*/
-div#userSign {
-    border:2px solid white;
-    border-radius: 400px;
-    text-align: center;
-    vertical-align: center
-}
-
 /*невидимая таблица*/
 
     tr#userInfo {
