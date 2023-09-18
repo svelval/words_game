@@ -1,5 +1,5 @@
 import datetime
-import re
+import secrets
 
 import bcrypt
 from quart import Quart, render_template, request, Response, redirect, url_for, make_response, abort
@@ -8,6 +8,8 @@ from checkers import is_authorized
 from constants import PATHS_WITHOUT_LOGIN
 from decorators import login_required
 from exceptions import ObjectNotFound
+from middleware import security_middleware, login_middleware, csrf_middleware, session_middleware, \
+    form_protection_middleware
 from site_variables import db
 from database import ObjectDoesNotExist
 
