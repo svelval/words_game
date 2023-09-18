@@ -146,12 +146,12 @@ async def before_request():
 
 
 @app.after_request
-async def redirect_to_login(response: Response):
-    if (request.path not in PATHS_WITHOUT_LOGIN) and (re.search('(\.css$)|(\.js$)|(\.ico$)|(\.jpg$)', request.path)) is None:
-        if not await is_authorized(request):
-            return redirect(url_for('login', next=request.path))
-        else:
-            return response
+async def after_request(response: Response):
+    response = await session_middleware(request, response)
+    response = await login_middleware(request, response)
+    response = await csrf_middleware(request, response)
+    response = await security_middleware(response)
+    return response
 
         # cookies = request.cookies
         # username = cookies.get('username')
