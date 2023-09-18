@@ -153,28 +153,6 @@ async def after_request(response: Response):
     response = await security_middleware(response)
     return response
 
-        # cookies = request.cookies
-        # username = cookies.get('username')
-        # password_hashed_hash = cookies.get('password')
-        #
-        # async def login_redirect():
-        #     resp = redirect(url_for('login'))
-        #     if request.cookies.get('next') is None:
-        #         resp.set_cookie('next', request.path)
-        #     return resp
-        #
-        # if (username is None) or (password_hashed_hash is None):
-        #     return await login_redirect()
-        #
-        # try:
-        #     user_password_hash = await db.get(table='user', columns=['password'], condition=f'name="{username}"')
-        # except ObjectDoesNotExist:
-        #     return await login_redirect()
-        #
-        # if bcrypt.checkpw(user_password_hash.encode('utf-8'), password_hashed_hash.encode('utf-8')):
-        #     return response
-        # else:
-        #     return await login_redirect()
 
         # if len(await db.filter(table='user', condition=f'name="{username}" AND password="{password_hashed_hash}"')) == 0:
         #     return await login_redirect()
