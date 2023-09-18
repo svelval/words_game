@@ -154,12 +154,15 @@ async def after_request(response: Response):
     return response
 
 
-        # if len(await db.filter(table='user', condition=f'name="{username}" AND password="{password_hashed_hash}"')) == 0:
-        #     return await login_redirect()
-        # else:
-        #     return response
-    else:
-        return response
+@app.context_processor
+def context():
+    cookies = request.cookies
+    cookies_csrf_token = cookies.get('csrf_token').encode('utf-8')
+    js_nonce = secrets.token_hex(16)
+    css_nonce = secrets.token_hex(16)
+    csrf_token = bcrypt.hashpw(cookies_csrf_token, bcrypt.gensalt()).decode('utf-8')
+
+    return {'js_nonce': js_nonce, 'css_nonce': css_nonce, 'csrf_token': csrf_token}
 
 
 if __name__ == '__main__':
