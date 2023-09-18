@@ -18,6 +18,7 @@
                     {% if not password_state %}
                         {% set password_state = "normal" %}
                     {% endif %}
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <div id="nameDiv">
                         <p style="margin: 0">Имя<br>
                             <input name="username" maxlength="15" data-state="{{ username_state }}" required></p>

@@ -49,7 +49,7 @@ async def login_middleware(request, response):
     if (request.path not in PATHS_WITHOUT_LOGIN) and (re.search('(\.css$)|(\.js$)|(\.ico$)|(\.jpg$)', request.path)) is None:
         if not await is_authorized(request):
             result_response = await make_response(redirect(url_for('login', next=request.path)))
-            result_response.headers = response.headers
+            return result_response
         else:
             return response
     else:
