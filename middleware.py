@@ -66,5 +66,5 @@ async def form_protection_middleware(request):
     if len(request_form) != 0:
         form_csrf_token = request_form.get('csrf_token').encode('utf-8')
         cookies_csrf_token = request.cookies.get('csrf_token').encode('utf-8')
-        if not bcrypt.checkpw(cookies_csrf_token, form_csrf_token):
+        if (form_csrf_token is None) or (not bcrypt.checkpw(cookies_csrf_token, form_csrf_token)):
             abort(403, 'CSRF verification failed. Request aborted.')
