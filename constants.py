@@ -3,3 +3,4 @@ PATHS_WITHOUT_LOGIN = [
     '/sign_up',
     #'/',
 ]
+DEFAULT_LANG_CODE = 'en'
