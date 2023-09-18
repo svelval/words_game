@@ -137,6 +137,12 @@ async def obj_not_found(error):
     return await render_template('460.html', obj_name=error.obj_name, obj=error.obj)
 
 
+@app.before_request
+async def before_request():
+    response = await form_protection_middleware(request)
+    return response
+
+
 @app.after_request
 async def redirect_to_login(response: Response):
     if (request.path not in PATHS_WITHOUT_LOGIN) and (re.search('(\.css$)|(\.js$)|(\.ico$)|(\.jpg$)', request.path)) is None:
