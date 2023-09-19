@@ -2,11 +2,9 @@ import datetime
 import secrets
 
 import bcrypt
-from quart import Quart, render_template, request, Response, redirect, url_for, make_response, abort, g
+from quart import Quart, render_template, request, Response, redirect, make_response, abort, g
 
 from checkers import is_authorized
-from constants import PATHS_WITHOUT_LOGIN
-from decorators import login_required
 from exceptions import ObjectNotFound
 from middleware import security_middleware, login_middleware, csrf_middleware, session_middleware, \
     form_protection_middleware
@@ -68,13 +66,6 @@ async def login_post():
     except ValueError:
         return await render_template(template_name, **template_args)
 
-    # if username is None:
-    #     template_args['username_is_correct'] = False
-    #     template_args['username_error'] = 'Укажите имя пользователя'
-    #     return await render_template(f'{request.path.replace("/", "")}.html', **template_args)
-    # if password is None:
-    #     template_args['password_is_correct'] = False
-    #     template_args['password_error'] = 'Укажите пароль пользователя'
     try:
         user_password_hash = await db.get(table='user', columns=['password'], condition=f'name="{username}"')
     except ObjectDoesNotExist:
@@ -125,7 +116,6 @@ async def user():
     template_args['description'] = description
     template_args['privilege'] = privilege
     template_args['first_letter'] = username_first_letter
-    print(template_args)
     return await render_template('user.html', **template_args)
 
 
