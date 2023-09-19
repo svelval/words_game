@@ -6,12 +6,20 @@
 
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/index.css') }}">
+    <style nonce="{{ style }}">
+        div.user_sign {
+            background-color: {{ user_color }};
+        }
+        td#header {
+            width: 25px;
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
          {% if is_authorized %}
              <tr id="userInfo">
-                 <td width="25px"><div class="user_sign" style="background-color: {{ user_color }}">{{ first_letter }}</div></td><td id="nickname"><a href="{{ url_for('user', name=username) }}" class="white hover-underlined">{{ username }}</a></td><td id="exitButtonPlace"><a id="exitButton" class="control">Выйти</a></td>
+                 <td id="header"><div class="user_sign">{{ first_letter }}</div></td><td id="nickname"><a href="{{ url_for('user', name=username) }}" class="white hover-underlined">{{ username }}</a></td><td id="exitButtonPlace"><a id="exitButton" class="control">Выйти</a></td>
              </tr>
          {% endif %}
          <tr>
