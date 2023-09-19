@@ -95,17 +95,6 @@ class CommonDatabase(Database):
         self.__db = 'words_game'
         super(CommonDatabase, self).__init__(db=self.__db, *args, **kwargs)
 
-    # @asynccontextmanager
-    # async def connect(self):
-    #     try:
-    #         yield await aiomysql.connect(port=3306, user='root', password='velka2015', db='mafiabot')
-    #         # if self.__connection is None:
-    #         #     self.__connection = await aiomysql.connect(port=3306, user='root', password='velka2015', db='mafiabot')
-    #         # yield self.__connection
-    #     finally:
-    #         self.__connection.close()
-    #         self.__connection = None
-    #
     async def __check_existence(self, table: str, columns: list, values: list,
                                 columns_to_check: list = None, close_connection: bool = True):
         if columns_to_check is None:
@@ -123,7 +112,6 @@ class CommonDatabase(Database):
                                  close_connection=close_connection)
 
     async def get_or_create(self, table: str, columns: list, values: list, **kwargs):
-        # TODO: узнать, почему возникают проблемы с подключением к БД, если не подключиться предварительно через MySQL Workbench
         found_objs, conn = await self.filter(table=table, columns=columns,
                                              condition=' AND '.join(
                                                  col + "=" + str(val) for col, val in zip(columns, values)),
@@ -202,10 +190,7 @@ class CommonDatabase(Database):
                 await conn.commit()
         self.release_connection(conn)
 
-    async def update_or_create(self, table: str, columns: list, values: list, condition: str,
-                               columns_to_check: list = None):
-        # found_objs, conn = await self.__check_existence(table=table, columns=columns, values=values,
-        #                                                 columns_to_check=columns_to_check, close_connection=False)
+    async def update_or_create(self, table: str, columns: list, values: list, condition: str):
         found_objs, conn = await self.filter(table=table, columns=columns, condition=condition, close_connection=False)
         if len(found_objs) == 0:
             await self.create(table=table, columns=columns, values=values, connection=conn)
@@ -220,18 +205,11 @@ class LanguagesDatabase(Database):
 
     async def get_text_content(self, dict_of_codenames: dict, lang_code: str, include_content_ids: bool = False):
         result = dict()
-        # conn = await self._connection_pool.acquire()
-        # cur = await conn.cursor()
 
         async with self._connection_pool.acquire() as conn:
             async with conn.cursor() as cur:
                 for table_type in dict_of_codenames.keys():
                     list_of_codenames = ','.join('"' + name + '"' for name in dict_of_codenames[table_type])
-                    # await cur.execute(f"CALL GET_TEXT_CONTENT('{table_type}', '{lang_code}', '{list_of_codenames}');")
-                    # await cur.execute(f'SELECT translation FROM translations WHERE text_content_id in '
-                    #                   f'(SELECT id FROM `text_content` WHERE id in '
-                    #                   f'(SELECT text_content_id FROM mafiabot.{table_type} WHERE codename in ({list_of_codenames}))) '
-                    #                   f'AND lang_id=(SELECT id FROM languages WHERE lang_code="{lang_code}");')
                     translations_query = 'SELECT translation'
                     originals_query = 'SELECT original_text'
                     if include_content_ids:
@@ -264,14 +242,6 @@ class LanguagesDatabase(Database):
                     else:
                         result[table_type] = result_text_content
 
-        # try:
-        #     await asyncio.gather(*[one_iteration(table_type) for table_type in dict_of_codenames.keys()])
-        # except Exception as e:
-        #     print(e)
-        #     traceback.print_exc()
-
-        # await cur.close()
-        # self.release_connection(conn)
         if len(result) == 1:
             result_list = list(result.values())[0]
             if len(result_list) == 1:
