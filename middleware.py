@@ -32,8 +32,12 @@ from cookies import get_or_create_cookie, get_cookie, set_cookie
 from site_variables import db
 
 
-async def security_middleware(response):
-    response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'"
+async def security_middleware(response, **kwargs):
+    headers = "default-src 'self';"
+    for setting_name in kwargs:
+        headers += f"{setting_name}-src 'self' 'nonce-{kwargs[setting_name]}';"
+
+    response.headers['Content-Security-Policy'] = headers
     return response
 
 
