@@ -2,7 +2,7 @@ import datetime
 import secrets
 
 import bcrypt
-from quart import Quart, render_template, request, Response, redirect, url_for, make_response, abort
+from quart import Quart, render_template, request, Response, redirect, url_for, make_response, abort, g
 
 from checkers import is_authorized
 from constants import PATHS_WITHOUT_LOGIN
@@ -147,10 +147,15 @@ async def before_request():
 
 @app.after_request
 async def after_request(response: Response):
+    if 'nonces' in g:
+        nonces = g.nonces
+    else:
+        nonces = {}
+
     response = await session_middleware(request, response)
     response = await login_middleware(request, response)
     response = await csrf_middleware(request, response)
-    response = await security_middleware(response)
+    response = await security_middleware(response, **nonces)
     return response
 
 
@@ -158,11 +163,16 @@ async def after_request(response: Response):
 def context():
     cookies = request.cookies
     cookies_csrf_token = cookies.get('csrf_token').encode('utf-8')
-    js_nonce = secrets.token_hex(16)
-    css_nonce = secrets.token_hex(16)
+    script_nonce = secrets.token_hex(16)
+    style_nonce = secrets.token_hex(16)
+    g.nonces = {'script': script_nonce, 'style': style_nonce}
+
     csrf_token = bcrypt.hashpw(cookies_csrf_token, bcrypt.gensalt()).decode('utf-8')
 
-    return {'js_nonce': js_nonce, 'css_nonce': css_nonce, 'csrf_token': csrf_token}
+    result = {'csrf_token': csrf_token}
+    result.update(g.nonces)
+
+    return result
 
 
 if __name__ == '__main__':
