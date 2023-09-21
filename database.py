@@ -205,43 +205,33 @@ class LanguagesDatabase(Database):
 
     async def get_text_content(self, dict_of_codenames: dict, lang_code: str, include_content_ids: bool = False):
         result = dict()
-
         async with self._connection_pool.acquire() as conn:
             async with conn.cursor() as cur:
-                for table_type in dict_of_codenames.keys():
+                for table_type in dict_of_codenames:
                     list_of_codenames = ','.join('"' + name + '"' for name in dict_of_codenames[table_type])
-                    translations_query = 'SELECT translation'
-                    originals_query = 'SELECT original_text'
+                    db_content_table = f'{self.__db}.{table_type}'
+                    query = 'SELECT translation, original_text'
                     if include_content_ids:
-                        translations_query += ', text_content_id'
-                        originals_query += ', id'
-                    translations_query += f' FROM translations WHERE text_content_id in (SELECT id FROM text_content WHERE id in (SELECT text_content_id FROM mafiabot.`{table_type}` WHERE codename in ({list_of_codenames}))) AND lang_id=(SELECT id FROM languages WHERE lang_code="{lang_code}") ORDER BY text_content_id'
-                    await cur.execute(translations_query)
-                    translations_content = np.asarray(list(await cur.fetchall()))
-                    if translations_content.ndim == 1:
-                        translations = translations_content.tolist()
-                    else:
-                        translations = translations_content[:, 0].tolist()
+                        query += f', {db_content_table}.text_content_id'
 
-                    originals_query += f' FROM text_content WHERE id in (SELECT text_content_id FROM mafiabot.`{table_type}` WHERE codename in ({list_of_codenames})) AND original_lang_id=(SELECT id FROM languages WHERE lang_code="{lang_code}") ORDER BY id'
-                    await cur.execute(originals_query)
-                    originals_content = np.asarray(list(await cur.fetchall()))
-                    if originals_content.ndim == 1:
-                        originals = originals_content.tolist()
-                    else:
-                        originals = originals_content[:, 0].tolist()
+                    query += f' FROM translations ' \
+                                          f'JOIN languages langs on translations.lang_id = langs.id' \
+                                          f'RIGHT JOIN {db_content_table} cont_table on translations.text_content_id = cont_table.text_content_id AND langs.lang_code="{lang_code}"' \
+                                          f'LEFT JOIN text_content ON text_content.id=cont_table.text_content_id AND original_lang_id=(SELECT id FROM languages WHERE lang_code="{lang_code}")' \
+                                          f'WHERE codename in ({list_of_codenames})' \
+                                          f'ORDER BY cont_table.text_content_id'
+                    await cur.execute(query)
+                    result_content = np.asarray(list(await cur.fetchall()))
 
-                    result_text_content = translations + originals
+                    cur_type_text_content = [row[0] if row[1] is None else row[1] for row in result_content]
+
                     if include_content_ids:
-                        translations_lang_ids = translations_content[:, 1].astype('int')
-                        originals_lang_ids = originals_content[:, 1].astype('int')
-                        result_lang_ids = np.concatenate((translations_lang_ids, originals_lang_ids))
+                        text_content_ids = result_content[:, 2].astype('int')
                         result[table_type] = dict()
-                        result[table_type]['content'] = result_text_content
-                        result[table_type]['content_ids'] = result_lang_ids
+                        result[table_type]['content'] = cur_type_text_content
+                        result[table_type]['content_ids'] = text_content_ids
                     else:
-                        result[table_type] = result_text_content
-
+                        result[table_type] = cur_type_text_content
         if len(result) == 1:
             result_list = list(result.values())[0]
             if len(result_list) == 1:
