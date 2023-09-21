@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 from aiomysql import create_pool
 from pymysql import IntegrityError
@@ -26,7 +28,8 @@ class Database(object):
             self._defaults = defaults
 
     async def create_connection_pool(self):
-        self._connection_pool = await create_pool(port=3306, user='root', password='velka2015', db=self.__db)
+        self._connection_pool = await create_pool(port=3306, user=os.getenv('DB_USER', ''),
+                                                  password=os.getenv('DB_PASSWORD', ''), db=self.__db)
 
     def release_connection(self, conn):
         self._connection_pool.release(conn)
