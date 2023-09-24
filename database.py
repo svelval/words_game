@@ -87,7 +87,8 @@ class Database(metaclass=DatabaseMeta):
             return result, conn
 
     async def get(self, table: str, columns: list = None, condition: str = None, **kwargs):
-        result, conn = await self.filter(table=table, columns=columns, condition=condition, close_connection=False, **kwargs)
+        result, conn = await self.filter(table=table, columns=columns, condition=condition, close_connection=False,
+                                         **kwargs)
         self.release_connection(conn)
         if len(result) == 0:
             raise ObjectDoesNotExist('No objects found')
@@ -222,11 +223,11 @@ class LanguagesDatabase(Database):
                         query += f', {db_content_table}.text_content_id'
 
                     query += f' FROM translations ' \
-                                          f'JOIN languages langs on translations.lang_id = langs.id' \
-                                          f'RIGHT JOIN {db_content_table} cont_table on translations.text_content_id = cont_table.text_content_id AND langs.lang_code="{lang_code}"' \
-                                          f'LEFT JOIN text_content ON text_content.id=cont_table.text_content_id AND original_lang_id=(SELECT id FROM languages WHERE lang_code="{lang_code}")' \
-                                          f'WHERE codename in ({list_of_codenames})' \
-                                          f'ORDER BY cont_table.text_content_id'
+                             f'JOIN languages langs on translations.lang_id = langs.id' \
+                             f'RIGHT JOIN {db_content_table} cont_table on translations.text_content_id = cont_table.text_content_id AND langs.lang_code="{lang_code}"' \
+                             f'LEFT JOIN text_content ON text_content.id=cont_table.text_content_id AND original_lang_id=(SELECT id FROM languages WHERE lang_code="{lang_code}")' \
+                             f'WHERE codename in ({list_of_codenames})' \
+                             f'ORDER BY cont_table.text_content_id'
                     await cur.execute(query)
                     result_content = np.asarray(list(await cur.fetchall()))
 
