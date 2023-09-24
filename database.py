@@ -4,15 +4,8 @@ import numpy as np
 from aiomysql import create_pool
 from pymysql import IntegrityError
 
+from database_exceptions import ObjectDoesNotExist, MultipleObjectsExist
 from decorators import database_errors_handler
-
-
-class MultipleObjectsExist(Exception):
-    pass
-
-
-class ObjectDoesNotExist(Exception):
-    pass
 
 
 class DatabaseMeta(type):
