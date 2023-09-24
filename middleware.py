@@ -25,7 +25,7 @@ import secrets
 import bcrypt
 
 from checkers import is_authorized
-from constants import PATHS_WITHOUT_LOGIN
+from constants import PATHS_WITHOUT_LOGIN, DEFAULT_LANG_CODE
 from quart import redirect, url_for, make_response, abort
 
 from cookies import get_or_create_cookie, get_cookie, set_cookie
@@ -72,3 +72,9 @@ async def form_protection_middleware(request):
         cookies_csrf_token = request.cookies.get('csrf_token').encode('utf-8')
         if (form_csrf_token is None) or (not bcrypt.checkpw(cookies_csrf_token, form_csrf_token)):
             abort(403, 'CSRF verification failed. Request aborted.')
+
+
+async def detect_language_middleware(request):
+    lang_from_cookies = get_cookie(request, 'lang')
+    if lang_from_cookies is None:
+        request.lang = DEFAULT_LANG_CODE
