@@ -4,6 +4,8 @@ import numpy as np
 from aiomysql import create_pool
 from pymysql import IntegrityError
 
+from decorators import database_errors_handler
+
 
 class MultipleObjectsExist(Exception):
     pass
@@ -13,7 +15,16 @@ class ObjectDoesNotExist(Exception):
     pass
 
 
-class Database(object):
+class DatabaseMeta(type):
+    def __new__(cls, name, bases, dct):
+        for member_name in dct:
+            member = dct[member_name]
+            if callable(member) and not (member_name.startswith('__') or member_name.endswith('__')):
+                dct[member_name] = database_errors_handler(member)
+        return type.__new__(cls, name, bases, dct)
+
+
+class Database(metaclass=DatabaseMeta):
     _defaults = {}
 
     def __new__(cls, *args, **kwargs):
