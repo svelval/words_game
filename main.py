@@ -7,8 +7,8 @@ from quart import Quart, render_template, request, Response, redirect, make_resp
 from checkers import is_authorized
 from exceptions import ObjectNotFound
 from middleware import security_middleware, login_middleware, csrf_middleware, session_middleware, \
-    form_protection_middleware, detect_language_middleware
-from site_variables import db
+    form_protection_middleware, detect_language_middleware, check_language_middleware
+from site_variables import db, lang_db
 from database import ObjectDoesNotExist
 
 app = Quart(__name__)
@@ -17,11 +17,13 @@ app = Quart(__name__)
 @app.before_serving
 async def on_startup():
     await db.create_connection_pool()
+    await lang_db.create_connection_pool()
 
 
 @app.after_serving
 async def on_shutdown():
     await db.close_all_connections()
+    await lang_db.close_all_connections()
 
 
 @app.route('/')
