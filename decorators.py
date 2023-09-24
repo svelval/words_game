@@ -9,9 +9,9 @@ def database_errors_handler(fun):
     async def wrapper(*args, **kwargs):
         try:
             if iscoroutinefunction(fun):
-                await fun(*args, **kwargs)
+                return await fun(*args, **kwargs)
             else:
-                fun(*args, **kwargs)
+                return fun(*args, **kwargs)
         except (AttributeError, NameError):
             raise ConnectionPoolDoesNotExist('Connection pool does not exist')
         except OperationalError as ex:
