@@ -1,20 +1,17 @@
-from quart import request, redirect, url_for
+from inspect import iscoroutinefunction
 
-from site_variables import db
+from pymysql import OperationalError
 
 
-async def login_required(route):
-    print('hhhhh')
+def database_errors_handler(fun):
     async def wrapper(*args, **kwargs):
-        cookies = request.cookies
-        username = cookies.get('name')
-        password_hash = cookies.get('password')
-        if (username is None) or (password_hash is None):
-            print(redirect(url_for('main.login')))
-            return
-        if len(await db.filter(table='user', condition=f'name={username} AND password={password_hash}')) == 0:
-            redirect(url_for('main.login'))
-            return
-        else:
-            await route(args, kwargs)
+        try:
+            if iscoroutinefunction(fun):
+                await fun(*args, **kwargs)
+            else:
+                fun(*args, **kwargs)
+        except (AttributeError, NameError):
+            print('Connection pool does not exist')
+        except OperationalError as ex:
+            print(f'Connection pool cannot be created: {ex}')
     return wrapper
