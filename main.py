@@ -134,7 +134,7 @@ async def obj_not_found(error):
 @app.before_request
 async def before_request():
     response = await form_protection_middleware(request)
-    await detect_language_middleware(request)
+    await check_language_middleware(request, g)
     return response
 
 
@@ -149,6 +149,7 @@ async def after_request(response: Response):
     response = await login_middleware(request, response)
     response = await csrf_middleware(request, response)
     response = await security_middleware(response, **nonces)
+    await detect_language_middleware(g, response)
     return response
 
 
@@ -162,7 +163,7 @@ def context():
 
     csrf_token = bcrypt.hashpw(cookies_csrf_token, bcrypt.gensalt()).decode('utf-8')
 
-    result = {'csrf_token': csrf_token}
+    result = {'csrf_token': csrf_token, 'lang': g.lang}
     result.update(g.nonces)
 
     return result

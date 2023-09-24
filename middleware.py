@@ -29,7 +29,7 @@ from constants import PATHS_WITHOUT_LOGIN, DEFAULT_LANG_CODE
 from quart import redirect, url_for, make_response, abort
 
 from cookies import get_or_create_cookie, get_cookie, set_cookie
-from site_variables import db
+from site_variables import db, lang_db
 
 
 async def security_middleware(response, **kwargs):
@@ -74,7 +74,13 @@ async def form_protection_middleware(request):
             abort(403, 'CSRF verification failed. Request aborted.')
 
 
-async def detect_language_middleware(request):
+async def check_language_middleware(request, request_vars):
     lang_from_cookies = get_cookie(request, 'lang')
     if lang_from_cookies is None:
-        request.lang = DEFAULT_LANG_CODE
+        request_vars.lang = DEFAULT_LANG_CODE
+    else:
+        request_vars.lang = lang_from_cookies if lang_from_cookies in await lang_db.get_all_lang_codes() else DEFAULT_LANG_CODE
+
+
+async def detect_language_middleware(request_vars, response):
+    set_cookie(response=response, key='lang', value=request_vars.lang)
