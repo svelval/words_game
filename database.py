@@ -208,7 +208,7 @@ class CommonDatabase(Database):
 
 class LanguagesDatabase(Database):
     def __init__(self, *args, **kwargs):
-        self.__db = 'mafiabot_langs'
+        self.__db = 'words_game_langs'
         super(LanguagesDatabase, self).__init__(db=self.__db, *args, **kwargs)
 
     async def get_text_content(self, dict_of_codenames: dict, lang_code: str, include_content_ids: bool = False):
