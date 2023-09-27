@@ -1,3 +1,9 @@
+:root {
+    --pink: #ff008c;
+    --light-pink: #ff41a5;
+    --pink-gradient: linear-gradient(to top, var(--pink), var(--light-pink));
+    --inverse-pink-gradient: linear-gradient(to top, var(--light-pink), var(--pink));
+}
 html, body {
     background-image: url("/static/images/cells.jpg");
     height:100%;
