@@ -218,7 +218,7 @@ class LanguagesDatabase(Database):
                 for table_type in dict_of_codenames:
                     list_of_codenames = ','.join('"' + name + '"' for name in dict_of_codenames[table_type])
                     db_content_table = f'{self.__db}.{table_type}'
-                    query = 'SELECT translation, original_text'
+                    query = 'SELECT codename, translation, original_text'
                     if include_content_ids:
                         query += f', {db_content_table}.text_content_id'
 
@@ -229,9 +229,8 @@ class LanguagesDatabase(Database):
                              f'WHERE codename in ({list_of_codenames})' \
                              f'ORDER BY cont_table.text_content_id'
                     await cur.execute(query)
-                    result_content = np.asarray(list(await cur.fetchall()))
-
-                    cur_type_text_content = [row[0] if row[1] is None else row[1] for row in result_content]
+                    result_content = list(await cur.fetchall())
+                    cur_type_text_content = {row[0]: row[1] if row[2] is None else row[2] for row in result_content}
 
                     if include_content_ids:
                         text_content_ids = result_content[:, 2].astype('int')
