@@ -37,6 +37,7 @@ async def security_middleware(response, **kwargs):
     for setting_name in kwargs:
         headers += f"{setting_name}-src 'self' 'nonce-{kwargs[setting_name]}';"
 
+    headers += f"img-src 'self'"
     response.headers['Content-Security-Policy'] = headers
     return response
 
