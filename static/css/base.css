@@ -7,17 +7,18 @@
 html, body {
     background-image: url("/static/images/cells.jpg");
     height:100%;
-    margin:0px;
-    padding:0px;
+    margin:0;
+    padding:0;
     color: white;
     font-family: "Arial", serif;
 }
-table#invisible {
-    height: 100%;
-    margin: auto;
-    background-color: #333366;
-    width: 30%;
-}
+/*table#invisible {*/
+/*    height: 100%;*/
+/*    margin: auto;*/
+/*    background-color: #333366;*/
+/*    width: 40%;*/
+/*    table-layout: auto;*/
+/*}*/
 a.control {
     border-radius: 15px;
     text-decoration: none;
@@ -37,7 +38,7 @@ div.user_sign {
     border:2px solid white;
     border-radius: 400px;
     text-align: center;
-    vertical-align: center
+    vertical-align: center;
 }
 select#lang_selector {
     color: white;
