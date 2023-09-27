@@ -7,7 +7,7 @@ from quart import Quart, render_template, request, Response, redirect, make_resp
 from checkers import is_authorized
 from exceptions import ObjectNotFound
 from middleware import security_middleware, login_middleware, csrf_middleware, session_middleware, \
-    form_protection_middleware, detect_language_middleware, check_language_middleware
+    form_protection_middleware, detect_language_middleware, languages_middleware
 from site_variables import db, lang_db
 from database import ObjectDoesNotExist
 
@@ -134,7 +134,7 @@ async def obj_not_found(error):
 @app.before_request
 async def before_request():
     response = await form_protection_middleware(request)
-    await check_language_middleware(request, g)
+    await languages_middleware(request, g)
     return response
 
 
