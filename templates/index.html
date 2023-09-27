@@ -6,14 +6,6 @@
 
 {% block styles %}
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/index.css') }}">
-    <style nonce="{{ style }}">
-        div.user_sign {
-            background-color: {{ user_color }};
-        }
-        td#header {
-            width: 25px;
-        }
-    </style>
 {% endblock %}
 
 {% block body %}
