@@ -1,10 +1,10 @@
 a.main-menu{
     padding: 10px 15px;
     color: #ffffff;
-    background: linear-gradient(to top,#ff008c,#ff41a5);
+    background: var(--pink-gradient);
 }
 a.main-menu:hover {
-    background: linear-gradient(to top,#ff41a5,#ff008c);
+    background: var(--inverse-pink-gradient);
 }
 a.main-menu:active {
     padding: 7px 12px;
@@ -22,19 +22,16 @@ a#exitButton:hover {
 a#exitButton:active {
     padding: 7px 12px;
 }
-
-/*невидимая таблица*/
-
-    tr#userInfo {
-        background: #333366;
-        height: 50px;
-    }
-        td#nickname {
-            text-align: left;
-        }
-        td#exitButtonPlace {
-            text-align: right;
-        }
+tr#userInfo {
+    background: #333366;
+    height: 50px;
+}
+td#nickname {
+    text-align: left;
+}
+td#exitButtonPlace {
+    text-align: right;
+}
 
 p {
     margin-bottom: 35px;
