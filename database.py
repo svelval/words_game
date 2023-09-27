@@ -249,6 +249,9 @@ class LanguagesDatabase(Database):
         else:
             return result
 
+    async def get_all_langs(self):
+        return {lang_info[0]: lang_info[1] for lang_info in await self.filter(table='languages', columns=['lang_code', 'lang_name'])}
+
     async def get_all_lang_codes(self):
         async with self._connection_pool.acquire() as conn:
             async with conn.cursor() as cur:
