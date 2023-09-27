@@ -163,7 +163,7 @@ def context():
 
     csrf_token = bcrypt.hashpw(cookies_csrf_token, bcrypt.gensalt()).decode('utf-8')
 
-    result = {'csrf_token': csrf_token, 'lang': g.lang}
+    result = {'csrf_token': csrf_token, 'lang': g.lang, 'all_langs': g.all_langs}
     result.update(g.nonces)
 
     return result
