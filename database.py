@@ -253,10 +253,7 @@ class LanguagesDatabase(Database):
         return {lang_info[0]: lang_info[1] for lang_info in await self.filter(table='languages', columns=['lang_code', 'lang_name'])}
 
     async def get_all_lang_codes(self):
-        async with self._connection_pool.acquire() as conn:
-            async with conn.cursor() as cur:
-                await cur.execute(f'SELECT lang_code FROM `languages` ORDER BY id')
-                return np.asarray(list(await cur.fetchall())).reshape(-1).tolist()
+        return (await self.get_all_langs()).keys()
 
     async def get_all_lang_ids(self):
         async with self._connection_pool.acquire() as conn:
