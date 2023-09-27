@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}{% endblock %}</title>
-    <style>
+    <style nonce="{{ style }}">
         :root {
             --background-url: "{{ url_for('static', filename='images/cells.jpg') }}"
         }
