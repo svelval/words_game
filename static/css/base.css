@@ -24,17 +24,11 @@ a.control {
     font-family: "Arial Black", serif;
     text-transform: uppercase;
 }
-a.white {
-    color: white;
-}
 a.hover-underlined {
     text-decoration-line: none;
 }
 a.hover-underlined:hover {
     text-decoration-line: underline;
-}
-h5.white {
-    color: white;
 }
 td.align-top {
     vertical-align: top;
