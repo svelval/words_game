@@ -7,6 +7,9 @@
         :root {
             --background-url: "{{ url_for('static', filename='images/cells.jpg') }}"
         }
+        div.user_sign {
+            background-color: {{ user_color }};
+        }
     </style>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/base.css') }}">
 </head>
