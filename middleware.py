@@ -75,12 +75,14 @@ async def form_protection_middleware(request):
             abort(403, 'CSRF verification failed. Request aborted.')
 
 
-async def check_language_middleware(request, request_vars):
+async def languages_middleware(request, request_vars):
+    if 'all_langs' not in request_vars:
+        request_vars.all_langs = await lang_db.get_all_langs()
     lang_from_cookies = get_cookie(request, 'lang')
     if lang_from_cookies is None:
         request_vars.lang = DEFAULT_LANG_CODE
     else:
-        request_vars.lang = lang_from_cookies if lang_from_cookies in await lang_db.get_all_lang_codes() else DEFAULT_LANG_CODE
+        request_vars.lang = lang_from_cookies if lang_from_cookies in request_vars.all_langs.keys() else DEFAULT_LANG_CODE
 
 
 async def detect_language_middleware(request_vars, response):
