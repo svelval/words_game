@@ -15,6 +15,70 @@
 </head>
 <body>
     {% block styles %}{% endblock %}
-    <table id="invisible">{% block body %}{% endblock %}</table>
+    <div class="main_table">
+        <div class="main_table_header_row white-background-third-transparent">
+            <div class="main_table_cell {% if is_authorized %}width-60 {% else %}full-width{% endif %}" id="lang_selector_cell">
+                <label for="lang_selector">Язык: </label>
+                <select id="lang_selector">
+                    {% for lang_info in all_langs.items() %}
+                        <option id="{{ lang_info[0] }}" {% if lang_info[0] == lang %} selected {% endif %}>{{ lang_info[1] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% if is_authorized %}
+                <div class="main_table_cell" id="user_sign_cell">
+                    <div class="user_sign">{{ first_letter }}</div>
+                </div>
+                <div class="main_table_cell" id="username_cell">
+                    <a href="{{ url_for('user', name=username) }}" class="white hover-underlined">{{ username }}</a>
+                </div>
+                <div class="main_table_cell" id="logout_cell">
+                    <a id="exitButton" class="control">Выйти</a>
+                </div>
+            {% endif %}
+        </div>
+        {% block body %}{% endblock %}
+    </div>
+
+
+{#    <table id="invisible">#}
+{#        <tr>#}
+{#            <td id="lang_selection_block">#}
+{#                <label for="lang_selector">Язык: </label>#}
+{#                <select id="lang_selector">#}
+{#                    {% for lang_info in all_langs.items() %}#}
+{#                        <option id="{{ lang_info[0] }}" {% if lang_info[0] == lang %} selected {% endif %}>{{ lang_info[1] }}</option>#}
+{#                    {% endfor %}#}
+{#                </select>#}
+{#            </td>#}
+{#            {% if is_authorized %}#}
+{#                <td id="user_sign_block"><div class="user_sign">{{ first_letter }}</div></td>#}
+{#                <td id="username_block"><div class=""><a href="{{ url_for('user', name=username) }}" class="white hover-underlined">{{ username }}</a></div></td>#}
+{#                <td id="exit_button_block"><div class=""><a id="exitButton" class="control">Выйти</a></div></td>#}
+{#            {% endif %}#}
+{##}
+{#            <td class="white-background-third-transparent full-width position-relative" colspan="100%">#}
+{#                    <div class="float-left">#}
+{#                        <label for="lang_selector">Язык: </label>#}
+{#                        <select id="lang_selector">#}
+{#                            {% for lang_info in all_langs.items() %}#}
+{#                                <option id="{{ lang_info[0] }}" {% if lang_info[0] == lang %} selected {% endif %}>{{ lang_info[1] }}</option>#}
+{#                            {% endfor %}#}
+{#                        </select>#}
+{#                    </div>#}
+{#                    <div class="right position-absolute">#}
+{#                        <div class="user_sign float-left">{{ first_letter }}</div>#}
+{#                        <div class="float-left"><a href="{{ url_for('user', name=username) }}" class="white hover-underlined">{{ username }}</a></div>#}
+{#                        <div class="float-left"><a id="exitButton" class="control">Выйти</a></div>#}
+{#                    </div>#}
+{#            </td>#}
+{#            <td id="header"><div class="user_sign">{{ first_letter }}</div></td><td id="nickname"><a href="{{ url_for('user', name=username) }}" class="white hover-underlined">{{ username }}</a></td><td id="exitButtonPlace"><a id="exitButton" class="control">Выйти</a></td>#}
+{#        </tr>#}
+{#        <tr>#}
+{#            <td colspan="100%"></td>#}
+{#        </tr>#}
+{#        {% block body %}{% endblock %}#}
+{#    </table>#}
+    <script src="{{ url_for('static', filename='scripts/base.js') }}"></script>
 </body>
 </html>
