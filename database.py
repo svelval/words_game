@@ -233,6 +233,7 @@ class LanguagesDatabase(Database):
                     cur_type_text_content = {row[0]: row[1] if row[2] is None else row[2] for row in result_content}
 
                     if include_content_ids:
+                        result_content = np.asarray(result_content)
                         text_content_ids = result_content[:, 2].astype('int')
                         result[table_type] = dict()
                         result[table_type]['content'] = cur_type_text_content
