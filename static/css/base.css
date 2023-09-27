@@ -5,7 +5,7 @@
     --inverse-pink-gradient: linear-gradient(to top, var(--light-pink), var(--pink));
 }
 html, body {
-    background-image: url("/static/images/cells.jpg");
+    background-image: var(--background-url);
     height:100%;
     margin:0;
     padding:0;

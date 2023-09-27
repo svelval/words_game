@@ -5,7 +5,7 @@
     <title>{% block title %}{% endblock %}</title>
     <style nonce="{{ style }}">
         :root {
-            --background-url: "{{ url_for('static', filename='images/cells.jpg') }}"
+            --background-url: url("{{ url_for('static', filename='images/cells.jpg') }}");
         }
         div.user_sign {
             background-color: {{ user_color }};
