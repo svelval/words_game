@@ -11,7 +11,7 @@
 {% block body %}
          <tr>
               <td class="align-top">
-                  <div class="username_div"><div class="user_sign" style="background-color: {{ user_color }}">{{ first_letter }}</div> {{ username }}</div>
+                  <div class="username_div"><div class="user_sign">{{ first_letter }}</div> {{ username }}</div>
                   <div class="user_info_div">
                       <p><img src="{{ url_for('static', filename='images/room_sign.png') }}">{% if last_visit %} Последний визит: {{ last_visit }}{% else %}Сейчас онлайн{% endif %}</p>
                       <p><img src="{{ url_for('static', filename='images/trophy.png') }}">Рейтинг: {{ rating }}</p>
