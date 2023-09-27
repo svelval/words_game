@@ -1,4 +1,12 @@
+import bcrypt
+
 from site_variables import lang_db
+
+
+def csrf_context_processor(request):
+    cookies = request.cookies
+    cookies_csrf_token = cookies.get('csrf_token').encode('utf-8')
+    return bcrypt.hashpw(cookies_csrf_token, bcrypt.gensalt()).decode('utf-8')
 
 
 async def languages_context_processor(request_vars):
