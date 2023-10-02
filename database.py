@@ -99,10 +99,6 @@ class Database(metaclass=DatabaseMeta):
 
 
 class CommonDatabase(Database):
-    def __init__(self, *args, **kwargs):
-        self.__db = 'words_game'
-        super(CommonDatabase, self).__init__(db=self.__db, *args, **kwargs)
-
     async def __check_existence(self, table: str, columns: list, values: list,
                                 columns_to_check: list = None, close_connection: bool = True):
         if columns_to_check is None:
