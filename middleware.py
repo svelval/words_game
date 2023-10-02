@@ -83,6 +83,7 @@ async def languages_middleware(request, request_vars):
         request_vars.lang = DEFAULT_LANG_CODE
     else:
         request_vars.lang = lang_from_cookies if lang_from_cookies in request_vars.all_langs.keys() else DEFAULT_LANG_CODE
+    request_vars.text_content = {}
 
 
 async def detect_language_middleware(request_vars, response):
