@@ -14,11 +14,13 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/base.css') }}">
 </head>
 <body>
+    {% set tc_info_texts=text_content['info_texts'] %}
+    {% set tc_button_texts=text_content['button_texts'] %}
     {% block styles %}{% endblock %}
     <div class="main_table">
         <div class="main_table_header_row white-background-third-transparent">
             <div class="main_table_cell {% if is_authorized %}width-60 {% else %}full-width{% endif %}" id="lang_selector_cell">
-                <label for="lang_selector">Язык: </label>
+                <label for="lang_selector">{{ tc_info_texts['language'] }} </label>
                 <select id="lang_selector">
                     {% for lang_info in all_langs.items() %}
                         <option id="{{ lang_info[0] }}" {% if lang_info[0] == lang %} selected {% endif %}>{{ lang_info[1] }}</option>
@@ -33,7 +35,7 @@
                     <a href="{{ url_for('user', name=username) }}" class="white hover-underlined">{{ username }}</a>
                 </div>
                 <div class="main_table_cell" id="logout_cell">
-                    <a id="exitButton" class="control">Выйти</a>
+                    <a id="exitButton" class="control">{{ tc_button_texts['logout'] }}</a>
                 </div>
             {% endif %}
         </div>
