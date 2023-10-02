@@ -214,16 +214,16 @@ class LanguagesDatabase(Database):
             async with conn.cursor() as cur:
                 for table_type in dict_of_codenames:
                     list_of_codenames = ','.join('"' + name + '"' for name in dict_of_codenames[table_type])
-                    db_content_table = f'{self.__db}.{table_type}'
+                    db_content_table = f'{self.__related_common_db}.{table_type}'
                     query = 'SELECT codename, translation, original_text'
                     if include_content_ids:
                         query += f', {db_content_table}.text_content_id'
 
                     query += f' FROM translations ' \
-                             f'JOIN languages langs on translations.lang_id = langs.id' \
-                             f'RIGHT JOIN {db_content_table} cont_table on translations.text_content_id = cont_table.text_content_id AND langs.lang_code="{lang_code}"' \
-                             f'LEFT JOIN text_content ON text_content.id=cont_table.text_content_id AND original_lang_id=(SELECT id FROM languages WHERE lang_code="{lang_code}")' \
-                             f'WHERE codename in ({list_of_codenames})' \
+                             f'JOIN languages langs on translations.lang_id = langs.id ' \
+                             f'RIGHT JOIN {db_content_table} cont_table on translations.text_content_id = cont_table.text_content_id AND langs.lang_code="{lang_code}" ' \
+                             f'LEFT JOIN text_content ON text_content.id=cont_table.text_content_id AND original_lang_id=(SELECT id FROM languages WHERE lang_code="{lang_code}") ' \
+                             f'WHERE codename in ({list_of_codenames}) ' \
                              f'ORDER BY cont_table.text_content_id'
                     await cur.execute(query)
                     result_content = list(await cur.fetchall())
