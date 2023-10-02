@@ -5,6 +5,7 @@ import bcrypt
 from quart import Quart, render_template, request, Response, redirect, make_response, abort, g
 
 from checkers import is_authorized
+from context_processor import languages_context_processor, csrf_context_processor, nonce_context_processor
 from exceptions import ObjectNotFound
 from middleware import security_middleware, login_middleware, csrf_middleware, session_middleware, \
     form_protection_middleware, detect_language_middleware, languages_middleware
@@ -154,18 +155,13 @@ async def after_request(response: Response):
 
 
 @app.context_processor
-def context():
-    cookies = request.cookies
-    cookies_csrf_token = cookies.get('csrf_token').encode('utf-8')
-    script_nonce = secrets.token_hex(16)
-    style_nonce = secrets.token_hex(16)
-    g.nonces = {'script': script_nonce, 'style': style_nonce}
+async def context():
+    text_content = await languages_context_processor(request_vars=g)
+    csrf_token = csrf_context_processor(request)
+    g.nonces = nonce_context_processor()
 
-    csrf_token = bcrypt.hashpw(cookies_csrf_token, bcrypt.gensalt()).decode('utf-8')
-
-    result = {'csrf_token': csrf_token, 'lang': g.lang, 'all_langs': g.all_langs}
+    result = {'csrf_token': csrf_token, 'lang': g.lang, 'all_langs': g.all_langs, 'text_content': text_content}
     result.update(g.nonces)
-
     return result
 
 
