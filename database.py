@@ -203,9 +203,10 @@ class CommonDatabase(Database):
 
 
 class LanguagesDatabase(Database):
-    def __init__(self, *args, **kwargs):
-        self.__db = 'words_game_langs'
-        super(LanguagesDatabase, self).__init__(db=self.__db, *args, **kwargs)
+    def __init__(self, related_common_db, lang_db=None, *args, **kwargs):
+        lang_db = related_common_db + '_langs' if lang_db is None else lang_db
+        self.__related_common_db = related_common_db
+        super(LanguagesDatabase, self).__init__(db=lang_db, *args, **kwargs)
 
     async def get_text_content(self, dict_of_codenames: dict, lang_code: str, include_content_ids: bool = False):
         result = dict()
