@@ -12,14 +12,14 @@
          <div class="main_table_row">
               {% if is_authorized %}
                   <div>
-                    <p><a href="/new_game" class="main-menu control">Создать комнату</a></p>
-                    <p><a href="/join_game" class="main-menu control">Присоединиться к комнате</a></p>
-                    <p><a href="/rate" class="main-menu control">Рейтинги</a></p>
+                    <p><a href="/new_game" class="main-menu control">{{ tc_button_texts['new_game'] }}</a></p>
+                    <p><a href="/join_game" class="main-menu control">{{ tc_button_texts['join_game'] }}</a></p>
+                    <p><a href="/rate" class="main-menu control">{{ tc_button_texts['rating'] }}</a></p>
                   </div>
               {% else %}
                   <div>
-                    <p><a href="/login" class="main-menu control">Войти</a></p>
-                    <p><a href="/sing_up" class="main-menu control">Зарегистрироваться</a></p>
+                    <p><a href="/login" class="main-menu control">{{ tc_button_texts['sign_in'] }}</a></p>
+                    <p><a href="/sing_up" class="main-menu control">{{ tc_button_texts['sign_up'] }}</a></p>
                   </div>
               {% endif %}
          </div>
