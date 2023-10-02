@@ -30,6 +30,7 @@ async def on_shutdown():
 @app.route('/')
 async def index():
     template_args = {}
+    g.text_content = {'button_texts': ['new_game', 'join_game', 'rating', 'sign_in', 'sign_up']}
     if await is_authorized(request):
         username = request.cookies['username']
         user_color = await db.get(table='user', columns=['sign_color'], condition=f'name="{username}"')
