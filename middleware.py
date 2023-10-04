@@ -29,6 +29,7 @@ from constants import PATHS_WITHOUT_LOGIN, DEFAULT_LANG_CODE
 from quart import redirect, url_for, make_response, abort
 
 from cookies import get_or_create_cookie, get_cookie, set_cookie
+from database_exceptions import ObjectDoesNotExist
 from site_variables import db, lang_db
 
 
@@ -50,15 +51,33 @@ async def session_middleware(request, response):
     return response
 
 
-async def login_middleware(request, response):
-    if (request.path not in PATHS_WITHOUT_LOGIN) and (re.search('(\.css$)|(\.js$)|(\.ico$)|(\.jpg$)', request.path)) is None:
-        if not await is_authorized(request):
-            result_response = await make_response(redirect(url_for('login', next=request.path)))
-            return result_response
+async def path_is_file_middleware(request, request_vars):
+    request_vars.path_is_file = (re.search('(\.css$)|(\.js$)|(\.ico$)|(\.jpg$)|(\.png$)', request.path) is not None)
+
+
+async def login_middleware(request, request_vars):
+    if not request_vars.path_is_file:
+        cookies = request.cookies
+        username = cookies.get('username')
+        password_hashed_hash = cookies.get('password')
+
+        if (username is None) or (password_hashed_hash is None):
+            request_vars.is_authorized = False
         else:
-            return response
+            try:
+                user_password_hash = await db.get(table='user', columns=['password'], condition=f'name="{username}"')
+                request_vars.is_authorized = bcrypt.checkpw(user_password_hash.encode('utf-8'),
+                                                            password_hashed_hash.encode('utf-8'))
+            except ObjectDoesNotExist:
+                request_vars.is_authorized = False
     else:
-        return response
+        request_vars.is_authorized = None
+
+
+async def login_required_middleware(request, request_vars):
+    if (request.path not in PATHS_WITHOUT_LOGIN) and (not request_vars.path_is_file) and (not request_vars.is_authorized):
+        result_response = await make_response(redirect(url_for('login', next=request.path)))
+        return result_response
 
 
 async def csrf_middleware(request, response):
