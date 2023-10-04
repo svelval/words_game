@@ -149,19 +149,15 @@ async def after_request(response: Response):
 
 @app.context_processor
 async def context():
-    context_data = {}
     text_content = await languages_context_processor(request_vars=g)
     csrf_token = csrf_context_processor(request)
     g.nonces = nonce_context_processor()
     g.user_data = await user_data_context_processor(request, g)
 
-    context_data.update({
+    return {
         'is_authorized': g.is_authorized, 'csrf_token': csrf_token, 'lang': g.lang, 'all_langs': g.all_langs,
-        'text_content': text_content
-    })
-    context_data.update(g.nonces)
-    context_data.update(g.user_data)
-    return context_data
+        'text_content': text_content, **g.nonces, **g.user_data
+    }
 
 
 if __name__ == '__main__':
