@@ -4,8 +4,9 @@ import secrets
 import bcrypt
 from quart import Quart, render_template, request, Response, redirect, make_response, abort, g
 
-from checkers import is_authorized
-from context_processor import languages_context_processor, csrf_context_processor, nonce_context_processor
+
+from context_processor import languages_context_processor, csrf_context_processor, nonce_context_processor, \
+    user_data_context_processor
 from exceptions import ObjectNotFound
 from middleware import security_middleware, login_middleware, csrf_middleware, session_middleware, \
     form_protection_middleware, detect_language_middleware, languages_middleware
@@ -29,17 +30,8 @@ async def on_shutdown():
 
 @app.route('/')
 async def index():
-    template_args = {}
     g.text_content = {'button_texts': ['new_game', 'join_game', 'rating', 'sign_in', 'sign_up']}
-    if await is_authorized(request):
-        username = request.cookies['username']
-        user_color = await db.get(table='user', columns=['sign_color'], condition=f'name="{username}"')
-        username_first_letter = username[0].upper()
-        template_args['is_authorized'] = True
-        template_args['username'] = username
-        template_args['user_color'] = user_color
-        template_args['first_letter'] = username_first_letter
-    return await render_template('index.html', **template_args)
+    return await render_template('index.html')
 
 
 @app.route('/login')
@@ -148,7 +140,6 @@ async def after_request(response: Response):
         nonces = {}
 
     response = await session_middleware(request, response)
-    response = await login_middleware(request, response)
     response = await csrf_middleware(request, response)
     response = await security_middleware(response, **nonces)
     await detect_language_middleware(g, response)
@@ -157,13 +148,20 @@ async def after_request(response: Response):
 
 @app.context_processor
 async def context():
+    context_data = {}
     text_content = await languages_context_processor(request_vars=g)
     csrf_token = csrf_context_processor(request)
     g.nonces = nonce_context_processor()
+    if not g.path_is_file:
+        await user_data_context_processor(request, g)
+        context_data.update(g.user_data)
 
-    result = {'csrf_token': csrf_token, 'lang': g.lang, 'all_langs': g.all_langs, 'text_content': text_content}
-    result.update(g.nonces)
-    return result
+    context_data.update({
+        'is_authorized': g.is_authorized, 'csrf_token': csrf_token, 'lang': g.lang, 'all_langs': g.all_langs,
+        'text_content': text_content
+    })
+    context_data.update(g.nonces)
+    return context_data
 
 
 if __name__ == '__main__':

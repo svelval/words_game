@@ -2,7 +2,7 @@ import secrets
 
 import bcrypt
 
-from site_variables import lang_db
+from site_variables import lang_db, db
 
 
 def csrf_context_processor(request):
@@ -15,6 +15,22 @@ def nonce_context_processor():
     script_nonce = secrets.token_hex(16)
     style_nonce = secrets.token_hex(16)
     return {'script': script_nonce, 'style': style_nonce}
+
+
+async def user_data_context_processor(request, request_vars):
+    if request_vars.is_authorized:
+        if 'user_data' not in request_vars:
+            user_data = {}
+            username = request.cookies['username']
+            user_color = await db.get(table='user', columns=['sign_color'], condition=f'name="{username}"')
+            username_first_letter = username[0].upper()
+            user_data['username'] = username
+            user_data['user_color'] = user_color
+            user_data['first_letter'] = username_first_letter
+            request_vars.user_data = user_data
+    else:
+        request_vars.pop('user_data', '')
+
 
 
 async def languages_context_processor(request_vars):
