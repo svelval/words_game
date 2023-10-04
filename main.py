@@ -8,8 +8,9 @@ from quart import Quart, render_template, request, Response, redirect, make_resp
 from context_processor import languages_context_processor, csrf_context_processor, nonce_context_processor, \
     user_data_context_processor
 from exceptions import ObjectNotFound
-from middleware import security_middleware, login_middleware, csrf_middleware, session_middleware, \
-    form_protection_middleware, detect_language_middleware, languages_middleware
+from middleware import security_middleware, login_required_middleware, csrf_middleware, session_middleware, \
+    form_protection_middleware, detect_language_middleware, languages_middleware, login_middleware, \
+    path_is_file_middleware
 from site_variables import db, lang_db
 from database import ObjectDoesNotExist
 
@@ -127,7 +128,10 @@ async def obj_not_found(error):
 
 @app.before_request
 async def before_request():
-    response = await form_protection_middleware(request)
+    await path_is_file_middleware(request, g)
+    await login_middleware(request, g)
+    response = await login_required_middleware(request, g)
+    await form_protection_middleware(request)
     await languages_middleware(request, g)
     return response
 
