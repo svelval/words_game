@@ -1,6 +1,10 @@
 :root {
     --pink: #ff008c;
     --light-pink: #ff41a5;
+    --red: red;
+    --dark-red: #be0000;
+    --red-gradient: linear-gradient(to top, var(--dark-red), var(--red));
+    --inverse-red-gradient: linear-gradient(to top, var(--red), var(--dark-red));
     --pink-gradient: linear-gradient(to top, var(--pink), var(--light-pink));
     --inverse-pink-gradient: linear-gradient(to top, var(--light-pink), var(--pink));
 }
