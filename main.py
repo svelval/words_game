@@ -153,15 +153,14 @@ async def context():
     text_content = await languages_context_processor(request_vars=g)
     csrf_token = csrf_context_processor(request)
     g.nonces = nonce_context_processor()
-    if not g.path_is_file:
-        await user_data_context_processor(request, g)
-        context_data.update(g.user_data)
+    g.user_data = await user_data_context_processor(request, g)
 
     context_data.update({
         'is_authorized': g.is_authorized, 'csrf_token': csrf_token, 'lang': g.lang, 'all_langs': g.all_langs,
         'text_content': text_content
     })
     context_data.update(g.nonces)
+    context_data.update(g.user_data)
     return context_data
 
 

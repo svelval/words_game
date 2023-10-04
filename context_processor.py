@@ -19,7 +19,7 @@ def nonce_context_processor():
 
 async def user_data_context_processor(request, request_vars):
     if request_vars.is_authorized:
-        if 'user_data' not in request_vars:
+        if request_vars.get('user_data') is None:
             user_data = {}
             username = request.cookies['username']
             user_color = await db.get(table='user', columns=['sign_color'], condition=f'name="{username}"')
@@ -27,9 +27,9 @@ async def user_data_context_processor(request, request_vars):
             user_data['username'] = username
             user_data['user_color'] = user_color
             user_data['first_letter'] = username_first_letter
-            request_vars.user_data = user_data
-    else:
-        request_vars.pop('user_data', '')
+            return user_data
+        else:
+            return request_vars.user_data
 
 
 
