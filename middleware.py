@@ -106,3 +106,7 @@ async def languages_middleware(request, request_vars):
 
 async def detect_language_middleware(request_vars, response):
     set_cookie(response=response, key='lang', value=request_vars.lang)
+
+
+def nonce_middleware(request_vars):
+    request_vars.nonces = {}

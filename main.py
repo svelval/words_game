@@ -10,7 +10,7 @@ from context_processor import languages_context_processor, csrf_context_processo
 from exceptions import ObjectNotFound
 from middleware import security_middleware, login_required_middleware, csrf_middleware, session_middleware, \
     form_protection_middleware, detect_language_middleware, languages_middleware, login_middleware, \
-    path_is_file_middleware
+    path_is_file_middleware, nonce_middleware
 from site_variables import db, lang_db
 from database import ObjectDoesNotExist
 
@@ -133,19 +133,16 @@ async def before_request():
     response = await login_required_middleware(request, g)
     await form_protection_middleware(request)
     await languages_middleware(request, g)
+
+    nonce_middleware(g)
     return response
 
 
 @app.after_request
 async def after_request(response: Response):
-    if 'nonces' in g:
-        nonces = g.nonces
-    else:
-        nonces = {}
-
     response = await session_middleware(request, response)
     response = await csrf_middleware(request, response)
-    response = await security_middleware(response, **nonces)
+    response = await security_middleware(response, **g.nonces)
     await detect_language_middleware(g, response)
     return response
 
