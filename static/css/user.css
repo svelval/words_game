@@ -2,7 +2,7 @@ img {
     width: 16px;
     height: 16px;
 }
-div.user_sign {
+div.username_div > div.user_sign {
     margin: auto;
     width: 20px;
 }
