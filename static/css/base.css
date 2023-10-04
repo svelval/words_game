@@ -35,6 +35,19 @@ a.hover-underlined {
 a.hover-underlined:hover {
     text-decoration-line: underline;
 }
+
+a#exitButton {
+    background: var(--red-gradient);
+    padding: 8px 12px;
+    font-size: 12px;
+    cursor: pointer;
+}
+a#exitButton:hover {
+    background: var(--inverse-red-gradient);
+}
+a#exitButton:active {
+    padding: 7px 12px;
+}
 td.align-top {
     vertical-align: top;
 }

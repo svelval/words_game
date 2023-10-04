@@ -10,18 +10,6 @@ a.main-menu:active {
     padding: 7px 12px;
 }
 
-a#exitButton {
-    background: linear-gradient(to top, #be0000, #ff0000);
-    padding: 8px 12px;
-    font-size: 12px;
-    cursor: pointer;
-}
-a#exitButton:hover {
-    background: linear-gradient(to top, #ff0000, #be0000);
-}
-a#exitButton:active {
-    padding: 7px 12px;
-}
 tr#userInfo {
     background: #333366;
     height: 50px;
