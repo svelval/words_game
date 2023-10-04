@@ -24,7 +24,6 @@ import secrets
 
 import bcrypt
 
-from checkers import is_authorized
 from constants import PATHS_WITHOUT_LOGIN, DEFAULT_LANG_CODE
 from quart import redirect, url_for, make_response, abort
 
