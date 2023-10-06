@@ -5,13 +5,13 @@
     <title>{% block title %}{% endblock %}</title>
     <style nonce="{{ style }}">
         :root {
-            --background-url: url("{{ url_for('static', filename='images/cells.jpg') }}");
+            --background-url: url("{{ static('images', 'cells.jpg') }}");
         }
         div.user_sign {
             background-color: {{ user_color }};
         }
     </style>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ static('css', 'base.css') }}">
 </head>
 <body>
     {% set tc_info_texts=text_content['info_texts'] %}
@@ -81,6 +81,6 @@
 {#        </tr>#}
 {#        {% block body %}{% endblock %}#}
 {#    </table>#}
-    <script src="{{ url_for('static', filename='scripts/base.js') }}"></script>
+    <script src="{{ static('scripts', 'base.js') }}"></script>
 </body>
 </html>

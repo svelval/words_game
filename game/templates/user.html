@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block styles %}
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/user.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ static('css', 'user.css') }}">
 {% endblock %}
 
 {% block body %}
@@ -13,11 +13,11 @@
               <td class="align-top">
                   <div class="username_div"><div class="user_sign">{{ first_letter }}</div> {{ username }}</div>
                   <div class="user_info_div">
-                      <p><img src="{{ url_for('static', filename='images/room_sign.png') }}">{% if last_visit %} Последний визит: {{ last_visit }}{% else %}Сейчас онлайн{% endif %}</p>
-                      <p><img src="{{ url_for('static', filename='images/trophy.png') }}">Рейтинг: {{ rating }}</p>
-                      <p><img src="{{ url_for('static', filename='images/a103.png') }}">Привилегия: {{ privilege }}</p>
-                      {% if description %}<p><img src="{{ url_for('static', filename='images/a121.png') }}">О пользователе: {{ description }}</p>{% endif %}
-                      <p><img src="{{ url_for('static', filename='images/a118.png') }}">Создан: {{ creation_date }}</p>
+                      <p><img src="{{ static('images', 'room_sign.png') }}">{% if last_visit %} Последний визит: {{ last_visit }}{% else %}Сейчас онлайн{% endif %}</p>
+                      <p><img src="{{ static('images', 'trophy.png') }}">Рейтинг: {{ rating }}</p>
+                      <p><img src="{{ static('images', 'a103.png') }}">Привилегия: {{ privilege }}</p>
+                      {% if description %}<p><img src="{{ static('images', 'a121.png') }}">О пользователе: {{ description }}</p>{% endif %}
+                      <p><img src="{{ static('images', 'a118.png') }}">Создан: {{ creation_date }}</p>
                   </div>
               </td>
          </tr>

@@ -1,8 +1,13 @@
 import secrets
 
 import bcrypt
+from quart import url_for
 
 from settings import db, lang_db
+
+
+def static_files_context_processor(*path, blueprint='', **kwargs):
+    return url_for(endpoint=f'{blueprint}.static', filename='/'.join(path), **kwargs)
 
 
 def csrf_context_processor(request):

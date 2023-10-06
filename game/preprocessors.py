@@ -2,7 +2,7 @@ from quart import g, request, Response
 from settings import db, lang_db
 
 from game.context_processor import languages_context_processor, csrf_context_processor, nonce_context_processor, \
-    user_data_context_processor
+    user_data_context_processor, static_files_context_processor
 from game.middleware import path_is_file_middleware, login_middleware, login_required_middleware, form_protection_middleware, \
     languages_middleware, nonce_middleware, session_middleware, csrf_middleware, security_middleware, \
     detect_language_middleware
@@ -42,8 +42,9 @@ async def context_processor():
     csrf_token = csrf_context_processor(request)
     g.nonces = nonce_context_processor()
     g.user_data = await user_data_context_processor(request, g)
+    static_function = static_files_context_processor
 
     return {
         'is_authorized': g.is_authorized, 'csrf_token': csrf_token, 'lang': g.lang, 'all_langs': g.all_langs,
-        'text_content': text_content, **g.nonces, **g.user_data
+        'text_content': text_content, 'static': static_function, **g.nonces, **g.user_data
     }
