@@ -32,7 +32,7 @@
                     <div class="user_sign">{{ first_letter }}</div>
                 </div>
                 <div class="main_table_cell" id="username_cell">
-                    <a href="{{ url_for('user', name=username) }}" class="white hover-underlined">{{ username }}</a>
+                    <a href="{{ url_for('game.user', name=username) }}" class="white hover-underlined">{{ username }}</a>
                 </div>
                 <div class="main_table_cell" id="logout_cell">
                     <a id="exitButton" class="control">{{ tc_button_texts['logout'] }}</a>
