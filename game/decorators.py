@@ -2,7 +2,7 @@ from inspect import iscoroutinefunction
 
 from pymysql import OperationalError
 
-from database_exceptions import ConnectionPoolCannotBeCreated, ConnectionPoolDoesNotExist, InternalDatabaseError
+from game.database_exceptions import ConnectionPoolCannotBeCreated, ConnectionPoolDoesNotExist, InternalDatabaseError
 
 
 def database_errors_handler(fun):

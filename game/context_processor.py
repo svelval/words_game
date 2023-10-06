@@ -2,7 +2,7 @@ import secrets
 
 import bcrypt
 
-from site_variables import lang_db, db
+from settings import db, lang_db
 
 
 def csrf_context_processor(request):
@@ -30,7 +30,6 @@ async def user_data_context_processor(request, request_vars):
             return user_data
         else:
             return request_vars.user_data
-
 
 
 async def languages_context_processor(request_vars):

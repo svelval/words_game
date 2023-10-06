@@ -24,12 +24,12 @@ import secrets
 
 import bcrypt
 
-from constants import PATHS_WITHOUT_LOGIN, DEFAULT_LANG_CODE
+from game.constants import PATHS_WITHOUT_LOGIN, DEFAULT_LANG_CODE
 from quart import redirect, url_for, make_response, abort
 
-from cookies import get_or_create_cookie, get_cookie, set_cookie
-from database_exceptions import ObjectDoesNotExist
-from site_variables import db, lang_db
+from game.cookies import get_or_create_cookie, get_cookie, set_cookie
+from game.database_exceptions import ObjectDoesNotExist
+from settings import db, lang_db
 
 
 async def security_middleware(response, **kwargs):

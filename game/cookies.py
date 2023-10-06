@@ -1,7 +1,7 @@
 import datetime
 
-from constants import DEFAULT_LANG_CODE
-from site_variables import lang_db
+from game.constants import DEFAULT_LANG_CODE
+from settings import lang_db
 
 
 def set_cookie(response, key: str, value: str, expire_date=None):
