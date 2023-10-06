@@ -25,15 +25,16 @@ class Database(metaclass=DatabaseMeta):
             cls.instance = super(Database, cls).__new__(cls)
         return cls.instance
 
-    def __init__(self, db: str, defaults: dict = None):
+    def __init__(self, db: str, user: str, password: str, defaults: dict = None):
         self._connection_pool = None
         self.__db = db
+        self.__user = user
+        self.__password = password
         if defaults is not None:
             self._defaults = defaults
 
     async def create_connection_pool(self):
-        self._connection_pool = await create_pool(port=3306, user=os.getenv('DB_USER', ''),
-                                                  password=os.getenv('DB_PASSWORD', ''), db=self.__db)
+        self._connection_pool = await create_pool(port=3306, user=self.__user, password=self.__password, db=self.__db)
 
     def release_connection(self, conn):
         self._connection_pool.release(conn)
