@@ -2,11 +2,27 @@ import os
 
 from game.database import CommonDatabase, LanguagesDatabase
 
-common_db_name = os.getenv('WORDS_GAME_DB_NAME', '')
-db_user = os.getenv('DB_USER', '')
-db_password = os.getenv('DB_PASSWORD', '')
 
-db = CommonDatabase(common_db_name, user=db_user, password=db_password)
-lang_db = LanguagesDatabase(related_common_db=common_db_name, user=db_user, password=db_password)
+DATABASES_INFO = {
+    'common': {
+        'name': os.getenv('WORDS_GAME_DB_NAME', ''),
+        'user': os.getenv('DB_USER'),
+        'password': os.getenv('DB_PASSWORD', '')
+    },
+    'langs': {
+        'name': os.getenv('WORDS_GAME_LANGS_DB_NAME', ''),
+        'user': os.getenv('DB_USER'),
+        'password': os.getenv('DB_PASSWORD', '')
+    },
+    'default': 'common',
+}
+
+db = CommonDatabase(DATABASES_INFO['common']['name'],
+                    user=DATABASES_INFO['common']['user'],
+                    password=DATABASES_INFO['common']['password'])
+lang_db = LanguagesDatabase(lang_db=DATABASES_INFO['langs']['name'],
+                            related_common_db=DATABASES_INFO['common']['name'],
+                            user=DATABASES_INFO['langs']['user'],
+                            password=DATABASES_INFO['langs']['password'])
 
 
