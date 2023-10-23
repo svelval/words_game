@@ -37,6 +37,8 @@ class CMDStyle:
 class Migration:
     def __init__(self):
         self.created_tables_info = {}
+        self.db_conn_pools = {}
+        self.applied_migrations = []
 
     @staticmethod
     def file_extension(filename: str):
@@ -198,58 +200,90 @@ class Migration:
                         migration_dependencies_in_file = f'[\n\t{migration_dependencies_in_file}\n]'
                     else:
                         migration_dependencies_in_file = '[]'
-                    with open(migration_path[:-3] + 'py', 'w') as new_migration:
+                    with open(migration_path[:-4], 'w') as new_migration:
                         new_migration.write(
                             f'dependencies = {migration_dependencies_in_file}\n\noperations = \'\'\'{migration_data_original}\'\'\'')
                         print(
                             f'\t\t\tMigration file ' + CMDStyle.yellow + new_migration.name + CMDStyle.reset + ' CREATED')
 
-    # def migrate(self):
-    #     connection_pool = pooling.MySQLConnectionPool(port=3306,
-    #                                                   database=common_db_name,
-    #                                                   user=db_user,
-    #                                                   password=db_password)
-    #     try:
-    #         with connection_pool.get_connection() as conn:
-    #             with conn.cursor() as cur:
-    #                 for blueprint in app.blueprints.values():
-    #                     blueprint_name = blueprint.import_name.split('.')[0]
-    #                     try:
-    #                         blueprint_migrations_folder = os.path.join(blueprint_name,
-    #                                                                    import_module(
-    #                                                                        f'{blueprint_name}.settings').MIGRATIONS_FOLDER)
-    #                     except (ModuleNotFoundError, AttributeError):
-    #                         blueprint_migrations_folder = os.path.join(blueprint_name, 'migrations')
-    #
-    #                     try:
-    #                         migrations = os.listdir(blueprint_migrations_folder)
-    #                     except FileNotFoundError:
-    #                         print(
-    #                             CMDStyle.red + f'Migrations directory "{blueprint_migrations_folder}" ({blueprint_name}) does not exist' + CMDStyle.reset)
-    #                         continue
-    #
-    #                     print(
-    #                         'Applying migrations in ' + CMDStyle.yellow + f'{blueprint_name}' + CMDStyle.reset + ' blueprint...')
-    #                     for i, migration in enumerate(migrations):
-    #                         if migration.split('.')[-1].lower() == 'sql':
-    #                             print(f'\t{i + 1}. ', end='')
-    #                             migration_path = os.path.join(blueprint_migrations_folder, migration)
-    #                             with open(migration_path, 'r') as file:
-    #                                 migration_data = file.read()
-    #
-    #                             try:
-    #                                 cur.execute(migration_data)
-    #                                 conn.commit()
-    #                                 print(CMDStyle.green + f'Migration "{migration}" applied' + CMDStyle.reset)
-    #                             except Exception as error:
-    #                                 print(
-    #                                     CMDStyle.red + f'Error in migration "{migration}": ' + CMDStyle.bold + f'{error}' + CMDStyle.reset)
-    #                                 continue
-    #                     print('\n')
-    #     except Exception as ex:
-    #         print(CMDStyle.red + f'Error during migrations applying process: {ex}' + CMDStyle.reset)
+    def __migration_applying_iteration(self, blueprint_name, migration_db_folder, migration, tabs_count):
+        migration_module_path = f'{blueprint_name}.migrations.{migration_db_folder}.{migration}'
+        tabs = ''.join(['\t' for _ in range(tabs_count)])
+        if migration_module_path in self.applied_migrations:
+            print(tabs + CMDStyle.cyan + f'Migration is already applied' + CMDStyle.reset)
+            return
+        try:
+            migration_module = import_module(f'{blueprint_name}.migrations.{migration_db_folder}.{migration}')
+            migration_dependencies = migration_module.dependencies
+            migration_operations = migration_module.operations
+        except (ModuleNotFoundError, AttributeError):
+            print(tabs + CMDStyle.red + f'File ' + CMDStyle.yellow + migration + CMDStyle.red + ' is not a migration' +
+                  CMDStyle.reset)
+            return
+
+        if migration_dependencies:
+            tabs_count += 1
+            tabs += '\t'
+        for dependency in migration_dependencies:
+            print(tabs + 'Current operation: applying dependency migration ' + CMDStyle.yellow + dependency +
+                  CMDStyle.reset + '...')
+            dependency_split = dependency.split('/')
+            blueprt_name = dependency_split[0]
+            migr_folder = dependency_split[1]
+            migr_name = dependency_split[2]
+            self.__migration_applying_iteration(blueprt_name, migr_folder, migr_name, tabs_count)
+
+        if migration_dependencies:
+            tabs = tabs.replace('\t', '', 1)
+        with self.db_conn_pools[f'{blueprint_name}/{migration_db_folder}'].get_connection() as conn:
+            with conn.cursor() as cur:
+                try:
+                    cur.execute(migration_operations)
+                    conn.commit()
+                    self.applied_migrations.append(migration_module_path)
+                    print(tabs + CMDStyle.green + f'Migration ' + CMDStyle.yellow + migration +
+                          CMDStyle.green + ' applied' + CMDStyle.reset)
+                except Exception as error:
+                    print(tabs + CMDStyle.red + f'Error while applying migration ' + CMDStyle.yellow +
+                          migration + CMDStyle.red + ': ' + CMDStyle.bold + str(error) + CMDStyle.reset)
+
     def migrate(self):
-        pass
+        migrations_folders = []
+        blueprints_names = [blueprint.import_name.split('.')[0] for blueprint in app.blueprints.values()]
+        for blueprint_name in blueprints_names:
+            migrations_folder_path = os.path.join(blueprint_name, 'migrations')
+            try:
+                migrations_db_folders = [filename for filename in os.listdir(migrations_folder_path)
+                                         if os.path.isdir(os.path.join(migrations_folder_path, filename)) and
+                                         filename in DATABASES_INFO]  # TODO: сделать тут DATABASES_INFO из файла настроек текущего блюпринта
+                if migrations_db_folders:
+                    migrations_folders.append(migrations_db_folders)
+                else:
+                    blueprints_names.remove(blueprint_name)
+                for migration_db_folder in migrations_db_folders:
+                    self.db_conn_pools[f'{blueprint_name}/{migration_db_folder}'] = pooling.MySQLConnectionPool(port=3306,
+                                                                  database=DATABASES_INFO[migration_db_folder]['name'],
+                                                                  user=DATABASES_INFO[migration_db_folder]['user'],
+                                                                  password=DATABASES_INFO[migration_db_folder]['password'])
+            except FileNotFoundError:
+                blueprints_names.remove(blueprint_name)
+
+        for blueprint_name, migrations_db_folders in zip(blueprints_names, migrations_folders):
+            migrations_folder_path = os.path.join(blueprint_name, 'migrations')
+            if migrations_db_folders:
+                print('Applying migrations of blueprint ' + CMDStyle.yellow + blueprint_name + CMDStyle.reset + '...')
+            for migration_db_folder in migrations_db_folders:
+                migrations_db_folder_path = os.path.join(migrations_folder_path, migration_db_folder)
+                migrations_files = [filename[:-3] for filename in os.listdir(migrations_db_folder_path)
+                                    if self.file_extension(filename) == 'py']
+                if migrations_files:
+                    print('\tIn folder ' + CMDStyle.yellow + migration_db_folder + CMDStyle.reset + '...')
+                else:
+                    self.db_conn_pools.pop(f'{blueprint_name}/{migration_db_folder}', None)
+                for i, migration in enumerate(migrations_files):
+                    print(f'\n\t\t{i + 1}. Migration ' + CMDStyle.yellow + migration + CMDStyle.reset + '...')
+                    tabs_count = 2
+                    self.__migration_applying_iteration(blueprint_name, migration_db_folder, migration, tabs_count)
 
 
 def execute_from_command_line(argv):
