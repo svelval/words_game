@@ -39,6 +39,12 @@ class Migration:
         self.created_tables_info = {}
         self.db_conn_pools = {}
         self.applied_migrations = []
+        self.blueprints_db_settings = {}
+        for blueprint_name in self.get_blueprint_names():
+            try:
+                self.blueprints_db_settings[blueprint_name] = import_module(f'{blueprint_name}.settings').DATABASES_INFO
+            except (ModuleNotFoundError, AttributeError):
+                self.blueprints_db_settings[blueprint_name] = DATABASES_INFO
 
     @staticmethod
     def get_blueprint_names():
@@ -186,7 +192,7 @@ class Migration:
                 os.mkdir(migrations_folder_path)
             except FileExistsError:
                 pass
-            for db_folder in DATABASES_INFO:
+            for db_folder in self.blueprints_db_settings[blueprint_name]:
                 try:
                     os.mkdir(os.path.join(migrations_folder_path, db_folder))
                 except FileExistsError:
@@ -200,7 +206,7 @@ class Migration:
             try:
                 migrations_db_folders = [filename for filename in os.listdir(migrations_folder_path)
                                          if os.path.isdir(os.path.join(migrations_folder_path, filename)) and
-                                         filename in DATABASES_INFO]  # TODO: сделать тут DATABASES_INFO из файла настроек текущего блюпринта
+                                         filename in self.blueprints_db_settings[blueprint_name]]
                 if migrations_db_folders:
                     migrations_folders.append(migrations_db_folders)
                 else:
@@ -224,8 +230,7 @@ class Migration:
                                 self.created_tables_info[table_name] = []
                             self.created_tables_info[table_name].append({
                                 'blueprint': blueprint_name,
-                                'db': DATABASES_INFO[migration_db_folder]['name'],
-                                # TODO: сделать тут DATABASES_INFO из файла настроек текущего блюпринта
+                                'db': self.blueprints_db_settings[blueprint_name][migration_db_folder]['name'],
                                 'db_folder': migration_db_folder,
                                 'migration': migration,
                                 'columns': [columns_info_entities.split(' ')[0] for columns_info_entities in
@@ -241,8 +246,7 @@ class Migration:
                 migrations_folder_path = os.path.join(blueprint_name, 'migrations', migrations_folder)
                 migrations_files = [filename for filename in os.listdir(migrations_folder_path)
                                     if self.__file_is_potential_migration(filename, 'sql')]
-                migration_db = DATABASES_INFO[migrations_folder][
-                    'name']  # TODO: тут тоже надо брать DATABASES_INFO из настроек блюпринта
+                migration_db = self.blueprints_db_settings[blueprint_name][migrations_folder]['name']
                 if migrations_files:
                     print('\tIn folder ' + CMDStyle.yellow + migrations_folder + CMDStyle.reset + '...')
                 for i, migration in enumerate(migrations_files):
@@ -277,16 +281,17 @@ class Migration:
             try:
                 migrations_db_folders = [filename for filename in os.listdir(migrations_folder_path)
                                          if os.path.isdir(os.path.join(migrations_folder_path, filename)) and
-                                         filename in DATABASES_INFO]  # TODO: сделать тут DATABASES_INFO из файла настроек текущего блюпринта
+                                         filename in self.blueprints_db_settings[blueprint_name]]
                 if migrations_db_folders:
                     migrations_folders.append(migrations_db_folders)
                 else:
                     blueprints_names.remove(blueprint_name)
                 for migration_db_folder in migrations_db_folders:
-                    self.db_conn_pools[f'{blueprint_name}/{migration_db_folder}'] = pooling.MySQLConnectionPool(port=3306,
-                                                                  database=DATABASES_INFO[migration_db_folder]['name'],
-                                                                  user=DATABASES_INFO[migration_db_folder]['user'],
-                                                                  password=DATABASES_INFO[migration_db_folder]['password'])
+                    self.db_conn_pools[f'{blueprint_name}/{migration_db_folder}'] = pooling.MySQLConnectionPool(
+                        port=3306,
+                        database=self.blueprints_db_settings[blueprint_name][migration_db_folder]['name'],
+                        user=self.blueprints_db_settings[blueprint_name][migration_db_folder]['user'],
+                        password=self.blueprints_db_settings[blueprint_name][migration_db_folder]['password'])
             except FileNotFoundError:
                 blueprints_names.remove(blueprint_name)
 

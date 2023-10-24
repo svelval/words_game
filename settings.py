@@ -14,7 +14,6 @@ DATABASES_INFO = {
         'user': os.getenv('DB_USER'),
         'password': os.getenv('DB_PASSWORD', '')
     },
-    'default': 'common',
 }
 
 db = CommonDatabase(DATABASES_INFO['common']['name'],
