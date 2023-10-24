@@ -1,10 +1,12 @@
+import datetime
 import os.path
 import re
 import traceback
 from importlib import import_module
 
-from mysql.connector import pooling
+from mysql.connector import pooling, ProgrammingError
 
+import settings
 from app_settings import app
 from settings import DATABASES_INFO
 
@@ -39,12 +41,16 @@ class Migration:
         self.created_tables_info = {}
         self.db_conn_pools = {}
         self.applied_migrations = []
+
+        blueprints_names = self.get_blueprint_names()
         self.blueprints_db_settings = {}
-        for blueprint_name in self.get_blueprint_names():
+        for blueprint_name in blueprints_names:
             try:
                 self.blueprints_db_settings[blueprint_name] = import_module(f'{blueprint_name}.settings').DATABASES_INFO
             except (ModuleNotFoundError, AttributeError):
                 self.blueprints_db_settings[blueprint_name] = DATABASES_INFO
+        self.migrations_for_db = []
+        self.applied_migrations_db = None
 
     @staticmethod
     def get_blueprint_names():
@@ -59,6 +65,62 @@ class Migration:
         migration_data = re.sub('\(\s*', '(', migration_data.lower().replace('\n', ''))
         return re.sub('\s*\)', ')', migration_data)
 
+    def __create_migrations_db_table(self):
+        try:
+            migrations_db_info = settings.MIGRATIONS_TABLE_INFO
+        except AttributeError:
+            default_db = settings.DATABASES_INFO['default']
+            migrations_db_info = settings.DATABASES_INFO[default_db]
+        with pooling.MySQLConnection(port=3306, database=migrations_db_info['name'],
+                                     user=migrations_db_info['user'], password=migrations_db_info['password']) as conn:
+            with conn.cursor() as cur:
+                try:
+                    for _ in cur.execute('''CREATE TABLE migrations (
+                                        id int not null auto_increment primary key,
+                                        blueprint varchar(100) not null,
+                                        db_name varchar(100) not null,
+                                        `name` varchar(150) not null,
+                                        applied datetime null,
+                                        unique (blueprint, db_name, `name`)
+                                   );
+    
+                                CREATE TRIGGER migrations_onCreate
+                                    BEFORE INSERT
+                                    ON `migrations` FOR EACH ROW
+                                        SET NEW.applied = IFNULL(NEW.applied, NOW());''', multi=True):
+                        ...
+                    conn.commit()
+                except ProgrammingError:
+                    pass
+        self.applied_migrations_db = migrations_db_info
+
+    def __get_applied_migrations(self):
+        try:
+            with pooling.MySQLConnection(port=3306, database=self.applied_migrations_db['name'],
+                                         user=self.applied_migrations_db['user'], password=self.applied_migrations_db['password']) as conn:
+                with conn.cursor() as cur:
+                    cur.execute(f'SELECT blueprint, db_name, `name` FROM migrations')
+                    return list(cur.fetchall())
+        except ProgrammingError:
+            raise NameError(CMDStyle.red + 'Cannot get applied migrations: most likely due to incorrect '
+                                           'MIGRATIONS_TABLE_INFO in project settings' + CMDStyle.reset)
+
+    def __write_applied_migrations_to_db(self):
+        if not self.migrations_for_db:
+            return
+        with pooling.MySQLConnection(port=3306, database=self.applied_migrations_db['name'],
+                                     user=self.applied_migrations_db['user'],
+                                     password=self.applied_migrations_db['password']) as conn:
+            with conn.cursor() as cur:
+                try:
+                    cur.execute(f'INSERT INTO migrations (blueprint, db_name, `name`, applied) VALUES '
+                                f'{",".join(self.migrations_for_db) + ";"}')
+                    conn.commit()
+                except ProgrammingError as err:
+                    duplicate_row = re.search('\'\S*\'', str(err)).group()
+                    raise NameError(CMDStyle.red + f'Migration ' + CMDStyle.yellow + duplicate_row + CMDStyle.red +
+                                    ' is already applied' + CMDStyle.reset)
+
     def __file_is_potential_migration(self, filename, allowed_extensions):
         if isinstance(allowed_extensions, str):
             allowed_extensions = [allowed_extensions]
@@ -67,7 +129,8 @@ class Migration:
     def __migration_applying_iteration(self, blueprint_name, migration_db_folder, migration, tabs_count):
         migration_module_path = f'{blueprint_name}.migrations.{migration_db_folder}.{migration}'
         tabs = ''.join(['\t' for _ in range(tabs_count)])
-        if migration_module_path in self.applied_migrations:
+        if (migration_module_path in self.applied_migrations) or \
+                ((blueprint_name, migration_db_folder, migration,) in self.earlier_applied_migrations):
             print(tabs + CMDStyle.cyan + f'Migration is already applied' + CMDStyle.reset)
             return
         try:
@@ -99,6 +162,8 @@ class Migration:
                     cur.execute(migration_operations)
                     conn.commit()
                     self.applied_migrations.append(migration_module_path)
+                    self.migrations_for_db.append(str((blueprint_name, migration_db_folder,
+                                                                       migration, str(datetime.datetime.now()),)))
                     print(tabs + CMDStyle.green + f'Migration ' + CMDStyle.yellow + migration +
                           CMDStyle.green + ' applied' + CMDStyle.reset)
                 except Exception as error:
@@ -274,6 +339,23 @@ class Migration:
                             f'\t\t\tMigration file ' + CMDStyle.yellow + new_migration.name + CMDStyle.reset + ' CREATED')
 
     def migrate(self):
+        try:
+            self.__create_migrations_db_table()
+        except (AttributeError, KeyError, ProgrammingError) as error:
+            if isinstance(error, (AttributeError, KeyError)):
+                error_msg = 'Database to save migrations is not specified. Check if you set MIGRATIONS_TABLE_INFO ' \
+                            'or \'default\' database inside DATABASES_INFO in ' + CMDStyle.yellow + 'settings.py'
+            else:
+                error_msg = f'Wrong data of migrations database : ' + CMDStyle.bold + str(error)
+            print(CMDStyle.red + error_msg + CMDStyle.reset)
+            return
+
+        try:
+            self.earlier_applied_migrations = self.__get_applied_migrations()
+        except NameError as err:
+            print(err)
+            return
+
         migrations_folders = []
         blueprints_names = self.get_blueprint_names()
         for blueprint_name in blueprints_names:
@@ -311,6 +393,10 @@ class Migration:
                     print(f'\n\t\t{i + 1}. Migration ' + CMDStyle.yellow + migration + CMDStyle.reset + '...')
                     tabs_count = 2
                     self.__migration_applying_iteration(blueprint_name, migration_db_folder, migration, tabs_count)
+        try:
+            self.__write_applied_migrations_to_db()
+        except NameError as err:
+            print(err)
 
 
 def execute_from_command_line(argv):
