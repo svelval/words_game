@@ -41,6 +41,10 @@ class Migration:
         self.applied_migrations = []
 
     @staticmethod
+    def get_blueprint_names():
+        return [blueprint.import_name.split('.')[0] for blueprint in app.blueprints.values()]
+
+    @staticmethod
     def file_extension(filename: str):
         return filename.lower().split('.')[-1]
 
@@ -175,10 +179,8 @@ class Migration:
                                                 f'columns ({", ".join(columns_to_edit)}) is not created in any migration',
                                                 dependencies, migration_warnings)
 
-    @staticmethod
-    def prepare_migration_folders():
-        blueprint_names = [blueprint.import_name.split('.')[0] for blueprint in app.blueprints.values()]
-        for blueprint_name in blueprint_names:
+    def prepare_migration_folders(self):
+        for blueprint_name in self.get_blueprint_names():
             migrations_folder_path = os.path.join(blueprint_name, 'migrations')
             try:
                 os.mkdir(migrations_folder_path)
@@ -192,7 +194,7 @@ class Migration:
 
     def make_migrations(self):
         migrations_folders = []
-        blueprints_names = [blueprint.import_name.split('.')[0] for blueprint in app.blueprints.values()]
+        blueprints_names = self.get_blueprint_names()
         for blueprint_name in blueprints_names:
             migrations_folder_path = os.path.join(blueprint_name, 'migrations')
             try:
@@ -269,7 +271,7 @@ class Migration:
 
     def migrate(self):
         migrations_folders = []
-        blueprints_names = [blueprint.import_name.split('.')[0] for blueprint in app.blueprints.values()]
+        blueprints_names = self.get_blueprint_names()
         for blueprint_name in blueprints_names:
             migrations_folder_path = os.path.join(blueprint_name, 'migrations')
             try:
