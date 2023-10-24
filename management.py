@@ -49,6 +49,11 @@ class Migration:
         migration_data = re.sub('\(\s*', '(', migration_data.lower().replace('\n', ''))
         return re.sub('\s*\)', ')', migration_data)
 
+    def __file_is_potential_migration(self, filename, allowed_extensions):
+        if isinstance(allowed_extensions, str):
+            allowed_extensions = [allowed_extensions]
+        return (self.file_extension(filename) in allowed_extensions) and (re.search('^[a-zA-Z_]', filename) is not None)
+
     def __make_dependencies(making_fun):
         def inner(self, migration_data, migration_db, dependencies):
             migration_warnings = []
@@ -146,7 +151,7 @@ class Migration:
                 for migration_db_folder in migrations_db_folders:
                     migrations_db_folder_path = os.path.join(migrations_folder_path, migration_db_folder)
                     migrations_files = [filename for filename in os.listdir(migrations_db_folder_path)
-                                        if self.file_extension(filename) in ['sql', 'py']]
+                                        if self.__file_is_potential_migration(filename, ['sql', 'py'])]
                     for migration in migrations_files:
                         with open(os.path.join(migrations_db_folder_path, migration), 'r') as data:
                             migration_data = self.__prepare_migration_data(data.read())
@@ -177,7 +182,7 @@ class Migration:
             for migrations_folder in blueprint_migrations_folders:
                 migrations_folder_path = os.path.join(blueprint_name, 'migrations', migrations_folder)
                 migrations_files = [filename for filename in os.listdir(migrations_folder_path)
-                                    if self.file_extension(filename) == 'sql']
+                                    if self.__file_is_potential_migration(filename, 'sql')]
                 migration_db = DATABASES_INFO[migrations_folder][
                     'name']  # TODO: тут тоже надо брать DATABASES_INFO из настроек блюпринта
                 if migrations_files:
@@ -275,7 +280,7 @@ class Migration:
             for migration_db_folder in migrations_db_folders:
                 migrations_db_folder_path = os.path.join(migrations_folder_path, migration_db_folder)
                 migrations_files = [filename[:-3] for filename in os.listdir(migrations_db_folder_path)
-                                    if self.file_extension(filename) == 'py']
+                                    if self.__file_is_potential_migration(filename, 'py')]
                 if migrations_files:
                     print('\tIn folder ' + CMDStyle.yellow + migration_db_folder + CMDStyle.reset + '...')
                 else:
