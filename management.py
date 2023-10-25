@@ -250,6 +250,23 @@ class Migration:
                                                 f'columns ({", ".join(columns_to_edit)}) is not created in any migration',
                                                 dependencies, migration_warnings)
 
+    @__make_dependencies
+    def make_create_index_dependencies(self, migration_data, migration_db, dependencies, migration_warnings):
+        print(f'\t\t\tCurrent operation: making dependencies for create indexes...')
+        index_creations = [match.group() for match in re.finditer('create\s+index\s+\S+\s+on\s+\S+\s+\(.+\)(\s*using.*)?;?', migration_data)]
+        for create_index_str in index_creations:
+            create_index_str_split = create_index_str.split()
+            indexing_table = create_index_str_split[4]
+            if indexing_table not in self.created_tables_info:
+                migration_warnings.append(
+                    f'Indexing table "{indexing_table}" is not created in any migration')
+                continue
+            indexing_columns = re.split(',\s*', re.sub('[()]', '', create_index_str_split[5]))
+            self.search_suitable_table_creation(indexing_table, migration_db, indexing_columns,
+                                                f'Table "{indexing_table}" with columns ({", ".join(indexing_columns)}) '
+                                                f'to indexing is not created in any migration',
+                                                dependencies, migration_warnings)
+
     def prepare_migration_folders(self):
         for blueprint_name in self.get_blueprint_names():
             migrations_folder_path = os.path.join(blueprint_name, 'migrations')
@@ -324,6 +341,7 @@ class Migration:
 
                     self.make_foreign_keys_dependencies(migration_data, migration_db, migration_dependencies)
                     self.make_alter_table_dependencies(migration_data, migration_db, migration_dependencies)
+                    self.make_create_index_dependencies(migration_data, migration_db, migration_dependencies)
 
                     # TODO: то же самое, только с ALTER_TABLE
                     if migration_dependencies:
