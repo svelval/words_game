@@ -68,7 +68,7 @@ class Migration:
     def __create_migrations_db_table(self):
         try:
             migrations_db_info = settings.MIGRATIONS_TABLE_INFO
-        except AttributeError:
+        except (AttributeError, KeyError):
             default_db = settings.DATABASES_INFO['default']
             migrations_db_info = settings.DATABASES_INFO[default_db]
         with pooling.MySQLConnection(port=3306, database=migrations_db_info['name'],
@@ -341,12 +341,14 @@ class Migration:
     def migrate(self):
         try:
             self.__create_migrations_db_table()
-        except (AttributeError, KeyError, ProgrammingError) as error:
+        except (AttributeError, KeyError, TypeError, ProgrammingError) as error:
             if isinstance(error, (AttributeError, KeyError)):
                 error_msg = 'Database to save migrations is not specified. Check if you set MIGRATIONS_TABLE_INFO ' \
-                            'or \'default\' database inside DATABASES_INFO in ' + CMDStyle.yellow + 'settings.py'
-            else:
+                            'or correct \'default\' database inside DATABASES_INFO in ' + CMDStyle.yellow + 'settings.py'
+            elif isinstance(error, ProgrammingError):
                 error_msg = f'Wrong data of migrations database : ' + CMDStyle.bold + str(error)
+            else:
+                error_msg = f'Wrong MIGRATIONS_TABLE_INFO or \'default\' DB in DATABASES_INFO : ' + CMDStyle.bold + str(error)
             print(CMDStyle.red + error_msg + CMDStyle.reset)
             return
 
