@@ -289,10 +289,15 @@ class Migration:
             columns_to_edit = [re.split('column\s+', stmt)[-1] for stmt in
                                re.split(',\s*', alter_table_body)
                                if 'column' in stmt]
-
+            indexes_to_edit = [stmt.split('index')[-1].split()[0] for stmt in re.finditer('\s+index\s+\S+\s*[,;]?',
+                                                                                          alter_table_body)]
             self.search_suitable_table_creation(altering_table, migration_db, columns_to_edit,
                                                 f'Altering table "{altering_table}" with '
                                                 f'columns ({", ".join(columns_to_edit)}) is not created in any migration',
+                                                dependencies, migration_warnings)
+            self.search_suitable_index_creation(altering_table, migration_db, f'Altering table "{altering_table}" with '
+                                                                              f'indexes ({", ".join(indexes_to_edit)})'
+                                                                              f' is not created in any migration',
                                                 dependencies, migration_warnings)
 
     @__make_dependencies
