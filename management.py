@@ -182,16 +182,36 @@ class Migration:
             migration_warnings.clear()
         return inner
 
-    def __add_index_creation(self, index_name, blueprint_name, table_name, migration, migration_db_folder):
-        if index_name not in self.created_indexes_info:
-            self.created_indexes_info[index_name] = []
-        self.created_indexes_info[index_name].append({
+    def __add_creation(self, creation_obj_name, blueprint_name, migration, migration_db_folder,
+                       table_name=..., columns=..., creation_dict=...):
+        creation_info = {
             'blueprint': blueprint_name,
             'db': self.blueprints_db_settings[blueprint_name][migration_db_folder]['name'],
             'db_folder': migration_db_folder,
             'migration': migration,
-            'table': table_name,
-        })
+        }
+        if table_name is not Ellipsis:
+            creation_info['table'] = table_name
+        if columns is not Ellipsis:
+            creation_info['columns'] = columns
+        if creation_obj_name not in creation_dict:
+            creation_dict[creation_obj_name] = []
+        creation_dict[creation_obj_name].append(creation_info)
+
+    def __add_table_creation(self, table_name, blueprint_name, migration, migration_db_folder, columns):
+        self.__add_creation(creation_obj_name=table_name, blueprint_name=blueprint_name, migration=migration,
+                            migration_db_folder=migration_db_folder, columns=columns,
+                            creation_dict=self.created_tables_info)
+
+    def __add_index_or_trigger_creation(self, creation_type, index_name, blueprint_name, table_name, migration,
+                                        migration_db_folder):
+        if creation_type == 'index':
+            creation_dict = self.created_indexes_info
+        else:
+            creation_dict = self.created_triggers_info
+        self.__add_creation(creation_obj_name=index_name, blueprint_name=blueprint_name, table_name=table_name,
+                            migration=migration, migration_db_folder=migration_db_folder,
+                            creation_dict=creation_dict)
 
     def __search_suitable_creation(self, table, table_db, warning, migration_dependencies, migration_warnings,
                                    table_cols=..., find_creation_in=...):
@@ -339,21 +359,14 @@ class Migration:
                             table_info_without_indexes = re.sub(table_indexes_re, '', table_info_without_keys)
                             only_column_defs = re.sub('create\s+table\s+\S+\s+\(', '', table_info_without_indexes)
                             table_columns_info = re.split(',\s*', only_column_defs)
-                            if table_name not in self.created_tables_info:
-                                self.created_tables_info[table_name] = []
-                            self.created_tables_info[table_name].append({
-                                'blueprint': blueprint_name,
-                                'db': self.blueprints_db_settings[blueprint_name][migration_db_folder]['name'],
-                                'db_folder': migration_db_folder,
-                                'migration': migration,
-                                'columns': [columns_info_entities.split(' ')[0] for columns_info_entities in
-                                            table_columns_info]
-                            })
+                            self.__add_table_creation(table_name, blueprint_name, migration, migration_db_folder,
+                                                      columns=[columns_info_entities.split(' ')[0]
+                                                               for columns_info_entities in table_columns_info])
                             for index_creation in table_index_creations:
                                 index_creation_split = index_creation.split('index')[-1].split()
                                 index_name = re.sub('[()]', '', index_creation_split[0])
-                                self.__add_index_creation(index_name, blueprint_name, table_name, migration,
-                                                          migration_db_folder)
+                                self.__add_index_or_trigger_creation('index', index_name, blueprint_name, table_name,
+                                                                     migration, migration_db_folder)
 
                         migration_indexes_creations = re.findall('create\s+index\s+\S+\s+on\s+\S+\s+\(.+\)',
                                                                  migration_data)
@@ -361,8 +374,8 @@ class Migration:
                             index_creation_split = index_creation.split()
                             index_name = index_creation_split[2]
                             index_table = index_creation_split[4]
-                            self.__add_index_creation(index_name, blueprint_name, index_table, migration,
-                                                      migration_db_folder)
+                            self.__add_index_or_trigger_creation('index', index_name, blueprint_name, index_table,
+                                                                 migration, migration_db_folder)
 
                         migration_triggers_creations = [match.group() for match in
                                                         re.finditer('create\s+trigger\s+(if\s+not\s+exists)?\s+\S+\s'
@@ -372,18 +385,12 @@ class Migration:
                             trigger_creation_split = trigger_creation.split()
                             if re.search('if\s+not\s+exists', trigger_creation_split[2]) is not None:
                                 trigger_name = trigger_creation_split[3]
-                                table_name = trigger_creation_split[6]
+                                trigger_table = trigger_creation_split[6]
                             else:
                                 trigger_name = trigger_creation_split[2]
-                                table_name = trigger_creation_split[5]
-                            # table_name_split = table_name.split('.')
-                            # if len(table_name_split) > 1:
-                            #     db = table_name_split[0]
-                            #     table_name = table_name_split[-1]
-                            # else:
-                            #     db = self.blueprints_db_settings[blueprint_name][migration_db_folder]['name']
-                            self.__add_index_creation(index_name, blueprint_name, index_table, migration,
-                                                      migration_db_folder)
+                                trigger_table = trigger_creation_split[5]
+                            self.__add_index_or_trigger_creation('trigger', trigger_name, blueprint_name, trigger_table,
+                                                                 migration, migration_db_folder)
 
 
             except FileNotFoundError:
