@@ -182,30 +182,53 @@ class Migration:
             migration_warnings.clear()
         return inner
 
-    def search_suitable_table_creation(self, table, table_db, table_cols, warning, migration_dependencies,
-                                       migration_warnings):
+    def __add_index_creation(self, index_name, blueprint_name, table_name, migration, migration_db_folder):
+        if index_name not in self.created_indexes_info:
+            self.created_indexes_info[index_name] = []
+        self.created_indexes_info[index_name].append({
+            'blueprint': blueprint_name,
+            'db': self.blueprints_db_settings[blueprint_name][migration_db_folder]['name'],
+            'db_folder': migration_db_folder,
+            'migration': migration,
+            'table': table_name,
+        })
+
+    def __search_suitable_creation(self, table, table_db, warning, migration_dependencies, migration_warnings,
+                                   table_cols=..., find_creation_in=...):
+        if not isinstance(find_creation_in, dict):
+            find_creation_in = self.created_tables_info
+        if not isinstance(table_cols, (str, list)):
+            table_cols = []
         if isinstance(table_cols, str):
             table_cols = [table_cols]
         migration_warnings.append(warning)
         try:
-            related_table_creations = list(
-                map(lambda altering_table_creation_info: altering_table_creation_info
-                    if altering_table_creation_info['db'] == table_db and
-                    all(table_col in altering_table_creation_info['columns'] for table_col in table_cols) else None,
-                    self.created_tables_info[table])
+            related_creations = list(
+                map(lambda creation_info: creation_info
+                if creation_info['db'] == table_db and
+                   all(table_col in creation_info['columns'] for table_col in table_cols) else None,
+                    find_creation_in[table])
             )
         except KeyError:
             return
-        related_table_suitable_creations = [creation for creation in related_table_creations if
-                                            creation is not None]
-        if related_table_suitable_creations:
-            suitable_creation_blueprint = related_table_suitable_creations[0]['blueprint']
-            suitable_creation_db_folder = related_table_suitable_creations[0]['db_folder']
-            suitable_creation_migration = related_table_suitable_creations[0]['migration']
+        related_suitable_creations = [creation for creation in related_creations if creation is not None]
+        if related_suitable_creations:
+            suitable_creation_blueprint = related_suitable_creations[0]['blueprint']
+            suitable_creation_db_folder = related_suitable_creations[0]['db_folder']
+            suitable_creation_migration = related_suitable_creations[0]['migration']
             dependency = f'{suitable_creation_blueprint}/{suitable_creation_db_folder}/{suitable_creation_migration}'
             if dependency not in migration_dependencies:
                 migration_dependencies.append(dependency)
             migration_warnings.remove(warning)
+
+    def search_suitable_table_creation(self, table, table_db, table_cols, warning, migration_dependencies,
+                                       migration_warnings):
+        self.__search_suitable_creation(table, table_db, warning, migration_dependencies, migration_warnings,
+                                        table_cols)
+
+    def search_suitable_index_creation(self, table, table_db, warning, migration_dependencies, migration_warnings):
+        self.__search_suitable_creation(table, table_db, warning, migration_dependencies, migration_warnings,
+                                        find_creation_in=self.created_indexes_info)
 
     @__make_dependencies
     def make_foreign_keys_dependencies(self, migration_data, migration_db, dependencies, migration_warnings):
