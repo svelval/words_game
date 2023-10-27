@@ -326,12 +326,18 @@ class Migration:
                     for migration in migrations_files:
                         with open(os.path.join(migrations_db_folder_path, migration), 'r') as data:
                             migration_data = self.__prepare_migration_data(data.read())
-                        migration_tables_creations = re.findall('create table\s*\S*\s*\(.*\);?', migration_data)
+                        migration_tables_creations = re.findall('create\s+table\s+\S+\s*\(.*\);?', migration_data)
                         for table_creation_info in migration_tables_creations:
-                            table_creation_info_split = table_creation_info.split(' ')
-                            table_name = table_creation_info_split[2].replace('`', '').replace('\'', '').replace('"', '')
-                            table_info_without_keys = re.sub('((foreign)|(primary) key).*', '', table_creation_info)
-                            only_column_defs = re.sub('create table \S*\s*\(', '', table_info_without_keys)
+                            table_creation_info_split = table_creation_info.split()
+                            table_name = table_creation_info_split[2].replace('`', '').replace('\'', '').replace('"',
+                                                                                                                 '')
+                            table_info_without_keys = re.sub('((foreign)|(primary)|(unique)\s+key).*', '',
+                                                             table_creation_info)
+
+                            table_indexes_re = '\S*\s*index\s+\S*\s*\(.+\),?'
+                            table_index_creations = re.findall(table_indexes_re, table_info_without_keys)
+                            table_info_without_indexes = re.sub(table_indexes_re, '', table_info_without_keys)
+                            only_column_defs = re.sub('create\s+table\s+\S+\s+\(', '', table_info_without_indexes)
                             table_columns_info = re.split(',\s*', only_column_defs)
                             if table_name not in self.created_tables_info:
                                 self.created_tables_info[table_name] = []
