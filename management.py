@@ -41,6 +41,7 @@ class Migration:
         self.created_tables_info = {}
         self.created_indexes_info = {}
         self.created_triggers_info = {}
+        self.migrations_creations = {}
         self.db_conn_pools = {}
         self.applied_migrations = []
 
@@ -173,9 +174,16 @@ class Migration:
                           migration + CMDStyle.red + ': ' + CMDStyle.bold + str(error) + CMDStyle.reset)
 
     def __make_dependencies(making_fun):
-        def inner(self, migration_data, migration_db, dependencies):
+        def inner(self, migration_data, migration_db, dependencies, migration_blueprint=...,
+                  migration_creations_dict_key=...):
             migration_warnings = []
-            making_fun(self, migration_data, migration_db, dependencies, migration_warnings)
+            args = (self, migration_data, migration_db, dependencies, migration_warnings)
+            kwargs = {}
+            if migration_blueprint is not Ellipsis:
+                kwargs['migration_blueprint'] = migration_blueprint
+            if migration_creations_dict_key is not Ellipsis:
+                kwargs['migration_creations_dict_key'] = migration_creations_dict_key
+            making_fun(*args, **kwargs)
             if migration_warnings:
                 print(CMDStyle.orange + f'\t\t\tWARNINGS:' + '\n\t\t\t\t- '.join(
                     migration_warnings) + CMDStyle.reset)
@@ -203,29 +211,46 @@ class Migration:
                             migration_db_folder=migration_db_folder, columns=columns,
                             creation_dict=self.created_tables_info)
 
-    def __add_index_or_trigger_creation(self, creation_type, index_name, blueprint_name, table_name, migration,
-                                        migration_db_folder):
+    def __add_index_or_trigger_creation(self, creation_type, index_of_trigger_name, blueprint_name, table_name,
+                                        migration, migration_db_folder, columns=...):
+        migration_path = f'{blueprint_name}/{migration_db_folder}/{migration}'
+        if migration_path not in self.migrations_creations:
+            self.migrations_creations[migration_path] = {
+                'index_names': [],
+                'index_tables': [],
+                'index_columns': [],
+                'trigger_names': [],
+                'trigger_tables': [],
+            }
         if creation_type == 'index':
             creation_dict = self.created_indexes_info
+            if columns is not Ellipsis:
+                self.migrations_creations[migration_path]['index_names'].append(index_of_trigger_name)
+                self.migrations_creations[migration_path]['index_names'].append(table_name)
+                self.migrations_creations[migration_path]['index_columns'].append(columns)
         else:
             creation_dict = self.created_triggers_info
-        self.__add_creation(creation_obj_name=index_name, blueprint_name=blueprint_name, table_name=table_name,
-                            migration=migration, migration_db_folder=migration_db_folder,
+            self.migrations_creations[migration_path][f'trigger_names'].append(index_of_trigger_name)
+            self.migrations_creations[migration_path][f'trigger_tables'].append(table_name)
+        self.__add_creation(creation_obj_name=index_of_trigger_name, blueprint_name=blueprint_name, table_name=table_name,
+                            migration=migration, migration_db_folder=migration_db_folder, columns=columns,
                             creation_dict=creation_dict)
 
     def __search_suitable_creation(self, table, table_db, warning, migration_dependencies, migration_warnings,
-                                   table_cols=..., find_creation_in=...):
+                                   table_blueprint=..., table_cols=..., find_creation_in=...):
         if not isinstance(find_creation_in, dict):
             find_creation_in = self.created_tables_info
         if not isinstance(table_cols, (str, list)):
             table_cols = []
         if isinstance(table_cols, str):
             table_cols = [table_cols]
+        if table_blueprint is Ellipsis:
+            table_blueprint = '*'
         migration_warnings.append(warning)
         try:
             related_creations = list(
                 map(lambda creation_info: creation_info
-                if creation_info['db'] == table_db and
+                if creation_info['db'] == table_db and creation_info['blueprint_name'] in [table_blueprint, '*'] and
                    all(table_col in creation_info['columns'] for table_col in table_cols) else None,
                     find_creation_in[table])
             )
@@ -241,14 +266,19 @@ class Migration:
                 migration_dependencies.append(dependency)
             migration_warnings.remove(warning)
 
-    def search_suitable_table_creation(self, table, table_db, table_cols, warning, migration_dependencies,
+    def search_suitable_table_creation(self, table, table_db, table_blueprint, table_cols, warning,
+                                       migration_dependencies, migration_warnings):
+        self.__search_suitable_creation(table, table_db, warning, migration_dependencies, migration_warnings,
+                                        table_blueprint, table_cols)
+
+    def search_suitable_index_creation(self, table, table_db, table_blueprint, warning, migration_dependencies,
                                        migration_warnings):
         self.__search_suitable_creation(table, table_db, warning, migration_dependencies, migration_warnings,
-                                        table_cols)
+                                        table_blueprint=table_blueprint, find_creation_in=self.created_indexes_info)
 
-    def search_suitable_index_creation(self, table, table_db, warning, migration_dependencies, migration_warnings):
-        self.__search_suitable_creation(table, table_db, warning, migration_dependencies, migration_warnings,
-                                        find_creation_in=self.created_indexes_info)
+    # def search_suitable_trigger_creation(self, table, table_db, warning, migration_dependencies, migration_warnings):
+    #     self.__search_suitable_creation(table, table_db, warning, migration_dependencies, migration_warnings,
+    #                                     find_creation_in=self.created_triggers_info)
 
     @__make_dependencies
     def make_foreign_keys_dependencies(self, migration_data, migration_db, dependencies, migration_warnings):
@@ -276,7 +306,8 @@ class Migration:
                                                 dependencies, migration_warnings)
 
     @__make_dependencies
-    def make_alter_table_dependencies(self, migration_data, migration_db, dependencies, migration_warnings):
+    def make_alter_table_dependencies(self, migration_data, migration_db, dependencies,
+                                      migration_warnings, migration_blueprint):
         print(f'\t\t\tCurrent operation: making dependencies for alter tables...')
         alters_tables = re.findall('alter table .*;?', migration_data)
         for alter_table_str in alters_tables:
@@ -291,29 +322,27 @@ class Migration:
                                if 'column' in stmt]
             indexes_to_edit = [stmt.split('index')[-1].split()[0] for stmt in re.finditer('\s+index\s+\S+\s*[,;]?',
                                                                                           alter_table_body)]
-            self.search_suitable_table_creation(altering_table, migration_db, columns_to_edit,
+            self.search_suitable_table_creation(altering_table, migration_db, migration_blueprint, columns_to_edit,
                                                 f'Altering table "{altering_table}" with '
                                                 f'columns ({", ".join(columns_to_edit)}) is not created in any migration',
                                                 dependencies, migration_warnings)
-            self.search_suitable_index_creation(altering_table, migration_db, f'Altering table "{altering_table}" with '
-                                                                              f'indexes ({", ".join(indexes_to_edit)})'
-                                                                              f' is not created in any migration',
+            self.search_suitable_index_creation(altering_table, migration_db, migration_blueprint,
+                                                f'Altering table "{altering_table}" with '
+                                                f'indexes ({", ".join(indexes_to_edit)})'
+                                                f' is not created in any migration',
                                                 dependencies, migration_warnings)
 
     @__make_dependencies
-    def make_create_index_dependencies(self, migration_data, migration_db, dependencies, migration_warnings):
+    def make_create_index_dependencies(self, migration_data, migration_db, dependencies, migration_warnings,
+                                       migration_creations_dict_key, migration_blueprint,):
         print(f'\t\t\tCurrent operation: making dependencies for create indexes...')
-        index_creations = [match.group() for match in re.finditer('create\s+index\s+\S+\s+on\s+\S+\s+\(.+\)(\s*using.*)?;?', migration_data)]
-        for create_index_str in index_creations:
-            create_index_str_split = create_index_str.split()
-            indexing_table = create_index_str_split[4]
-            if indexing_table not in self.created_tables_info:
+        for index_name, index_table, index_columns in zip(*(self.migrations_creations[migration_creations_dict_key].values())):
+            if index_table not in self.created_tables_info:
                 migration_warnings.append(
-                    f'Indexing table "{indexing_table}" is not created in any migration')
+                    f'Indexing table "{index_table}" is not created in any migration')
                 continue
-            indexing_columns = re.split(',\s*', re.sub('[()]', '', create_index_str_split[5]))
-            self.search_suitable_table_creation(indexing_table, migration_db, indexing_columns,
-                                                f'Table "{indexing_table}" with columns ({", ".join(indexing_columns)}) '
+            self.search_suitable_table_creation(index_table, migration_db, migration_blueprint, index_columns,
+                                                f'Table "{index_table}" with columns ({", ".join(index_columns)}) '
                                                 f'to indexing is not created in any migration',
                                                 dependencies, migration_warnings)
 
@@ -365,7 +394,7 @@ class Migration:
                             only_column_defs = re.sub('create\s+table\s+\S+\s+\(', '', table_info_without_indexes)
                             table_columns_info = re.split(',\s*', only_column_defs)
                             self.__add_table_creation(table_name, blueprint_name, migration, migration_db_folder,
-                                                      columns=[columns_info_entities.split(' ')[0]
+                                                      columns=[columns_info_entities.split()[0]
                                                                for columns_info_entities in table_columns_info])
                             for index_creation in table_index_creations:
                                 index_creation_split = index_creation.split('index')[-1].split()
@@ -379,8 +408,9 @@ class Migration:
                             index_creation_split = index_creation.split()
                             index_name = index_creation_split[2]
                             index_table = index_creation_split[4]
+                            index_columns = re.split(',\s*', re.sub('[()]', '', index_creation_split[5]))
                             self.__add_index_or_trigger_creation('index', index_name, blueprint_name, index_table,
-                                                                 migration, migration_db_folder)
+                                                                 migration, migration_db_folder, columns=index_columns)
 
                         migration_triggers_creations = [match.group() for match in
                                                         re.finditer('create\s+trigger\s+(if\s+not\s+exists)?\s+\S+\s'
@@ -396,8 +426,6 @@ class Migration:
                                 trigger_table = trigger_creation_split[5]
                             self.__add_index_or_trigger_creation('trigger', trigger_name, blueprint_name, trigger_table,
                                                                  migration, migration_db_folder)
-
-
             except FileNotFoundError:
                 blueprints_names.remove(blueprint_name)
                 continue
@@ -419,9 +447,14 @@ class Migration:
                         migration_data_original = data.read()
                     migration_data = self.__prepare_migration_data(migration_data_original)
 
+                    migration_creations_dict_key = f'{blueprint_name}/{migrations_folder}/{migration}'
                     self.make_foreign_keys_dependencies(migration_data, migration_db, migration_dependencies)
-                    self.make_alter_table_dependencies(migration_data, migration_db, migration_dependencies)
-                    self.make_create_index_dependencies(migration_data, migration_db, migration_dependencies)
+                    self.make_alter_table_dependencies(migration_data, migration_db, migration_dependencies,
+                                                       migration_blueprint=blueprint_name)
+                    self.make_create_index_dependencies(migration_data, migration_db, migration_dependencies,
+                                                        migration_blueprint=blueprint_name,
+                                                        migration_creations_dict_key=migration_creations_dict_key)
+
 
                     # TODO: то же самое, только с ALTER_TABLE
                     if migration_dependencies:
