@@ -270,8 +270,8 @@ class Migration:
         self.__search_suitable_creation(table, table_db, warning, migration_dependencies, migration_warnings,
                                         table_blueprint, table_cols)
 
-    def search_suitable_index_creation(self, table, table_db, table_blueprint, warning, migration_dependencies,
-                                       migration_warnings):
+    def search_suitable_index_creation(self, table, table_db, warning, migration_dependencies,
+                                       migration_warnings, table_blueprint):
         self.__search_suitable_creation(table, table_db, warning, migration_dependencies, migration_warnings,
                                         table_blueprint=table_blueprint, find_creation_in=self.created_indexes_info)
 
