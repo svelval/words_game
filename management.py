@@ -285,7 +285,7 @@ class Migration:
         foreign_keys = re.findall('foreign key\s*\S*\s*\(.*\) references .*', migration_data)
         foreign_keys_split = [foreign_key.split() for foreign_key in foreign_keys]
         for foreign_key_info in foreign_keys_split:
-            if foreign_key_info[2].find('(') == -1:
+            if '(' not in foreign_key_info[2]:
                 foreign_key_name = foreign_key_info[2]
                 del foreign_key_info[2]
             else:
@@ -308,15 +308,15 @@ class Migration:
     def make_alter_table_dependencies(self, migration_data, migration_db, dependencies,
                                       migration_warnings, migration_blueprint):
         print(f'\t\t\tCurrent operation: making dependencies for alter tables...')
-        alters_tables = re.findall('alter table .*;?', migration_data)
+        alters_tables = re.findall('alter\s+table\s+.*;?', migration_data)
         for alter_table_str in alters_tables:
             altering_table = alter_table_str.split()[2]
             if altering_table not in self.created_tables_info:
                 migration_warnings.append(
                     f'Altering table "{altering_table}" is not created in any migration')
                 continue
-            alter_table_body = re.sub('alter table (\S)*(\s)*', '', alter_table_str)
-            columns_to_edit = [re.split('column\s+', stmt)[-1] for stmt in
+            alter_table_body = re.sub('alter\s+table\s+\S+\s+', '', alter_table_str)
+            columns_to_edit = [re.split('\s+column\s+', stmt)[-1].split()[0] for stmt in
                                re.split(',\s*', alter_table_body)
                                if 'column' in stmt]
             indexes_to_edit = [stmt.split('index')[-1].split()[0] for stmt in re.finditer('\s+index\s+\S+\s*[,;]?',
