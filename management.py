@@ -265,8 +265,8 @@ class Migration:
                 migration_dependencies.append(dependency)
             migration_warnings.remove(warning)
 
-    def search_suitable_table_creation(self, table, table_db, table_blueprint, table_cols, warning,
-                                       migration_dependencies, migration_warnings):
+    def search_suitable_table_creation(self, table, table_db, table_cols, warning,
+                                       migration_dependencies, migration_warnings, table_blueprint=...):
         self.__search_suitable_creation(table, table_db, warning, migration_dependencies, migration_warnings,
                                         table_blueprint, table_cols)
 
