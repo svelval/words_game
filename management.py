@@ -341,7 +341,7 @@ class Migration:
                 migration_warnings.append(
                     f'Indexing table "{index_table}" is not created in any migration')
                 continue
-            self.search_suitable_table_creation(index_table, migration_db, migration_blueprint, index_columns,
+            self.search_suitable_table_creation(index_table, migration_db, index_columns,
                                                 f'Table "{index_table}" with columns ({", ".join(index_columns)}) '
                                                 f'to indexing is not created in any migration',
                                                 dependencies, migration_warnings)
