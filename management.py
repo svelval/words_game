@@ -382,9 +382,8 @@ class Migration:
                         migration_tables_creations = re.findall('create\s+table\s+\S+\s*\(.*\);?', migration_data)
                         for table_creation_info in migration_tables_creations:
                             table_creation_info_split = table_creation_info.split()
-                            table_name = table_creation_info_split[2].replace('`', '').replace('\'', '').replace('"',
-                                                                                                                 '')
-                            table_info_without_keys = re.sub('((foreign)|(primary)|(unique)\s+key).*', '',
+                            table_name = re.sub('["\'`]', '', table_creation_info_split[2])
+                            table_info_without_keys = re.sub('[(,]?\s*((foreign)|(primary)|(unique)\s+key)\s+\S*\s*\(.*\)', '',
                                                              table_creation_info)
 
                             table_indexes_re = '\S*\s*index\s+\S*\s*\(.+\),?'
