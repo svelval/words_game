@@ -268,7 +268,7 @@ class Migration:
     def search_suitable_table_creation(self, table, table_db, table_cols, warning,
                                        migration_dependencies, migration_warnings, table_blueprint=...):
         self.__search_suitable_creation(table, table_db, warning, migration_dependencies, migration_warnings,
-                                        table_blueprint, table_cols)
+                                        table_blueprint=table_blueprint, table_cols=table_cols)
 
     def search_suitable_index_creation(self, table, table_db, warning, migration_dependencies,
                                        migration_warnings, table_blueprint):
