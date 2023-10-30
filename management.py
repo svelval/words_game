@@ -324,12 +324,13 @@ class Migration:
             self.search_suitable_table_creation(altering_table, migration_db, migration_blueprint, columns_to_edit,
                                                 f'Altering table "{altering_table}" with '
                                                 f'columns ({", ".join(columns_to_edit)}) is not created in any migration',
-                                                dependencies, migration_warnings)
-            self.search_suitable_index_creation(altering_table, migration_db, migration_blueprint,
-                                                f'Altering table "{altering_table}" with '
-                                                f'indexes ({", ".join(indexes_to_edit)})'
-                                                f' is not created in any migration',
-                                                dependencies, migration_warnings)
+                                                dependencies, migration_warnings, table_blueprint=migration_blueprint)
+            if indexes_to_edit:
+                self.search_suitable_index_creation(altering_table, migration_db,
+                                                    f'Altering table "{altering_table}" with '
+                                                    f'indexes ({", ".join(indexes_to_edit)})'
+                                                    f' is not created in any migration',
+                                                    dependencies, migration_warnings, migration_blueprint)
 
     @__make_dependencies
     def make_create_index_dependencies(self, migration_data, migration_db, dependencies, migration_warnings,
