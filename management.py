@@ -521,7 +521,8 @@ class Migration:
             for migration_db_folder in migrations_db_folders:
                 migrations_db_folder_path = os.path.join(migrations_folder_path, migration_db_folder)
                 migrations_files = [filename[:-3] for filename in os.listdir(migrations_db_folder_path)
-                                    if self.__file_is_potential_migration(filename, 'py')]
+                                    if self.__file_is_potential_migration(filename, 'py',
+                                                                          file_directory_path=migrations_db_folder_path)]
                 if migrations_files:
                     print('\tIn folder ' + CMDStyle.yellow + migration_db_folder + CMDStyle.reset + '...')
                 else:
