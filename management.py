@@ -244,13 +244,12 @@ class Migration:
             table_cols = []
         if isinstance(table_cols, str):
             table_cols = [table_cols]
-        if table_blueprint is Ellipsis:
-            table_blueprint = '*'
         migration_warnings.append(warning)
         try:
             related_creations = list(
                 map(lambda creation_info: creation_info
-                if creation_info['db'] == table_db and creation_info['blueprint_name'] in [table_blueprint, '*'] and
+                if creation_info['db'] == table_db and
+                   ((creation_info['blueprint'] == table_blueprint) + (table_blueprint is Ellipsis)) and
                    all(table_col in creation_info['columns'] for table_col in table_cols) else None,
                     find_creation_in[table])
             )
