@@ -336,7 +336,9 @@ class Migration:
     def make_create_index_dependencies(self, migration_data, migration_db, dependencies, migration_warnings,
                                        migration_creations_dict_key, migration_blueprint,):
         print(f'\t\t\tCurrent operation: making dependencies for create indexes...')
-        for index_name, index_table, index_columns in zip(*(self.migrations_creations[migration_creations_dict_key].values())):
+        if migration_creations_dict_key not in self.migrations_creations:
+            return
+        for index_name, index_table, index_columns in zip(*(self.migrations_creations[migration_creations_dict_key].values()[:3])):
             if index_table not in self.created_tables_info:
                 migration_warnings.append(
                     f'Indexing table "{index_table}" is not created in any migration')
