@@ -251,7 +251,7 @@ class Migration:
             related_creations = list(
                 map(lambda creation_info: creation_info
                 if creation_info['db'] == table_db and
-                   ((creation_info['blueprint'] == table_blueprint) + (table_blueprint is Ellipsis)) and
+                   ((table_blueprint is Ellipsis) or (creation_info['blueprint'] == table_blueprint)) and
                    all(table_col in creation_info['columns'] for table_col in table_cols) else None,
                     find_creation_in[table])
             )
@@ -445,7 +445,7 @@ class Migration:
                     print('\tIn folder ' + CMDStyle.yellow + migrations_folder + CMDStyle.reset + '...')
                 for i, migration in enumerate(migrations_files):
                     print(f'\t\t{i + 1}. From file ' + CMDStyle.yellow + migration + CMDStyle.reset + '...')
-                    migration_path = os.path.join(migrations_folder_path, migration)
+                    migration_path = os.path.join(migrations_db_folder_path, migration)
                     migration_dependencies = []
                     with open(migration_path, 'r') as data:
                         migration_data_original = data.read()
