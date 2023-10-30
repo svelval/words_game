@@ -321,7 +321,7 @@ class Migration:
                                if 'column' in stmt]
             indexes_to_edit = [stmt.split('index')[-1].split()[0] for stmt in re.finditer('\s+index\s+\S+\s*[,;]?',
                                                                                           alter_table_body)]
-            self.search_suitable_table_creation(altering_table, migration_db, migration_blueprint, columns_to_edit,
+            self.search_suitable_table_creation(altering_table, migration_db, columns_to_edit,
                                                 f'Altering table "{altering_table}" with '
                                                 f'columns ({", ".join(columns_to_edit)}) is not created in any migration',
                                                 dependencies, migration_warnings, table_blueprint=migration_blueprint)
@@ -386,7 +386,6 @@ class Migration:
                             table_name = re.sub('["\'`]', '', table_creation_info_split[2])
                             table_info_without_keys = re.sub('[(,]?\s*((foreign)|(primary)|(unique)\s+key)\s+\S*\s*\(.*\)', '',
                                                              table_creation_info)
-
                             table_indexes_re = '\S*\s*index\s+\S*\s*\(.+\),?'
                             table_index_creations = re.findall(table_indexes_re, table_info_without_keys)
                             table_info_without_indexes = re.sub(table_indexes_re, '', table_info_without_keys)
