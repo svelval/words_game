@@ -463,7 +463,7 @@ class Migration:
                         migration_dependencies_in_file = f'[\n\t{migration_dependencies_in_file}\n]'
                     else:
                         migration_dependencies_in_file = '[]'
-                    with open(migration_path[:-4], 'w') as new_migration:
+                    with open(migration_path[:-3] + 'py', 'w') as new_migration:
                         new_migration.write(
                             f'dependencies = {migration_dependencies_in_file}\n\noperations = \'\'\'{migration_data_original}\'\'\'')
                         print(
