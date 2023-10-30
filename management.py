@@ -259,7 +259,7 @@ class Migration:
         if related_suitable_creations:
             suitable_creation_blueprint = related_suitable_creations[0]['blueprint']
             suitable_creation_db_folder = related_suitable_creations[0]['db_folder']
-            suitable_creation_migration = related_suitable_creations[0]['migration']
+            suitable_creation_migration = os.path.splitext(related_suitable_creations[0]['migration'])[0]
             dependency = f'{suitable_creation_blueprint}/{suitable_creation_db_folder}/{suitable_creation_migration}'
             if dependency not in migration_dependencies:
                 migration_dependencies.append(dependency)
