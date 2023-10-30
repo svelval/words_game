@@ -125,10 +125,11 @@ class Migration:
                     raise NameError(CMDStyle.red + f'Migration ' + CMDStyle.yellow + duplicate_row + CMDStyle.red +
                                     ' is already applied' + CMDStyle.reset)
 
-    def __file_is_potential_migration(self, filename, allowed_extensions):
+    def __file_is_potential_migration(self, filename, allowed_extensions, file_directory_path=...):
         if isinstance(allowed_extensions, str):
             allowed_extensions = [allowed_extensions]
-        return (self.file_extension(filename) in allowed_extensions) and (re.search('^[a-zA-Z_]', filename) is not None)
+        return (self.file_extension(filename) in allowed_extensions) and (re.search('^[a-zA-Z_]', filename) is not None) \
+               and ((file_directory_path is Ellipsis) or (not os.path.isdir(os.path.join(file_directory_path, filename))))
 
     def __migration_applying_iteration(self, blueprint_name, migration_db_folder, migration, tabs_count):
         migration_module_path = f'{blueprint_name}.migrations.{migration_db_folder}.{migration}'
@@ -379,7 +380,8 @@ class Migration:
                 for migration_db_folder in migrations_db_folders:
                     migrations_db_folder_path = os.path.join(migrations_folder_path, migration_db_folder)
                     migrations_files = [filename for filename in os.listdir(migrations_db_folder_path)
-                                        if self.__file_is_potential_migration(filename, ['sql', 'py'])]
+                                        if self.__file_is_potential_migration(filename, ['sql', 'py'],
+                                                                              file_directory_path=migrations_db_folder_path)]
                     for migration in migrations_files:
                         with open(os.path.join(migrations_db_folder_path, migration), 'r') as data:
                             migration_data = self.__prepare_migration_data(data.read())
@@ -434,9 +436,10 @@ class Migration:
         for blueprint_name, blueprint_migrations_folders in zip(blueprints_names, migrations_folders):
             print('Making migrations for blueprint ' + CMDStyle.yellow + blueprint_name + CMDStyle.reset + '...')
             for migrations_folder in blueprint_migrations_folders:
-                migrations_folder_path = os.path.join(blueprint_name, 'migrations', migrations_folder)
-                migrations_files = [filename for filename in os.listdir(migrations_folder_path)
-                                    if self.__file_is_potential_migration(filename, 'sql')]
+                migrations_db_folder_path = os.path.join(blueprint_name, 'migrations', migrations_folder)
+                migrations_files = [filename for filename in os.listdir(migrations_db_folder_path)
+                                    if self.__file_is_potential_migration(filename, 'sql',
+                                                                          file_directory_path=migrations_db_folder_path)]
                 migration_db = self.blueprints_db_settings[blueprint_name][migrations_folder]['name']
                 if migrations_files:
                     print('\tIn folder ' + CMDStyle.yellow + migrations_folder + CMDStyle.reset + '...')
