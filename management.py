@@ -267,8 +267,8 @@ class Migration:
                 migration_dependencies.append(dependency)
             migration_warnings.remove(warning)
 
-    def search_suitable_table_creation(self, table, table_db, table_cols, warning,
-                                       migration_dependencies, migration_warnings, table_blueprint=...):
+    def search_suitable_table_creation(self, table, table_db, warning,
+                                       migration_dependencies, migration_warnings, table_cols=..., table_blueprint=...):
         self.__search_suitable_creation(table, table_db, warning, migration_dependencies, migration_warnings,
                                         table_blueprint=table_blueprint, table_cols=table_cols)
 
@@ -301,10 +301,10 @@ class Migration:
             if len(related_table_split) == 2:
                 related_table_db = related_table_split[0]
 
-            self.search_suitable_table_creation(related_table, related_table_db, related_table_column,
+            self.search_suitable_table_creation(related_table, related_table_db,
                                                 f'Related table "{related_table_db}.{related_table}" of foreign key '
                                                 f'"{foreign_key_name}" is not created in any migration',
-                                                dependencies, migration_warnings)
+                                                dependencies, migration_warnings, table_cols=related_table_column)
 
     @__make_dependencies
     def make_alter_table_dependencies(self, migration_data, migration_db, dependencies,
@@ -323,10 +323,11 @@ class Migration:
                                if 'column' in stmt]
             indexes_to_edit = [stmt.split('index')[-1].split()[0] for stmt in re.finditer('\s+index\s+\S+\s*[,;]?',
                                                                                           alter_table_body)]
-            self.search_suitable_table_creation(altering_table, migration_db, columns_to_edit,
+            self.search_suitable_table_creation(altering_table, migration_db,
                                                 f'Altering table "{altering_table}" with '
                                                 f'columns ({", ".join(columns_to_edit)}) is not created in any migration',
-                                                dependencies, migration_warnings, table_blueprint=migration_blueprint)
+                                                dependencies, migration_warnings, table_cols=columns_to_edit,
+                                                table_blueprint=migration_blueprint)
             if indexes_to_edit:
                 self.search_suitable_index_creation(altering_table, migration_db,
                                                     f'Altering table "{altering_table}" with '
@@ -345,7 +346,7 @@ class Migration:
                 migration_warnings.append(
                     f'Indexing table "{index_table}" is not created in any migration')
                 continue
-            self.search_suitable_table_creation(index_table, migration_db, index_columns,
+            self.search_suitable_table_creation(index_table, migration_db,
                                                 f'Table "{index_table}" with columns ({", ".join(index_columns)}) '
                                                 f'to indexing is not created in any migration',
                                                 dependencies, migration_warnings)
