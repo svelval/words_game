@@ -349,7 +349,39 @@ class Migration:
             self.search_suitable_table_creation(index_table, migration_db,
                                                 f'Table "{index_table}" with columns ({", ".join(index_columns)}) '
                                                 f'to indexing is not created in any migration',
-                                                dependencies, migration_warnings)
+                                                dependencies, migration_warnings, table_cols=index_columns,
+                                                table_blueprint=migration_blueprint)
+
+    @__make_dependencies
+    def make_create_trigger_dependencies(self, migration_data, migration_db, dependencies, migration_warnings,
+                                         migration_creations_dict_key, migration_blueprint,):
+        print(f'\t\t\tCurrent operation: making dependencies for create triggers...')
+        if migration_creations_dict_key not in self.migrations_creations:
+            return
+        for trigger_name, trigger_table in zip(*(self.migrations_creations[migration_creations_dict_key].values()[3:])):
+            if trigger_table not in self.created_tables_info:
+                migration_warnings.append(
+                    f'Table "{trigger_table}" inside "{trigger_name}" trigger is not created in any migration')
+                continue
+            self.search_suitable_table_creation(trigger_table, migration_db,
+                                                f'Trigger "{trigger_name}" on table "{trigger_table}" is not created '
+                                                f'in any migration',
+                                                dependencies, migration_warnings, table_blueprint=migration_blueprint)
+    #
+    # @__make_dependencies
+    # def make_drop_trigger_dependencies(self, migration_data, migration_db, dependencies, migration_warnings):
+    #     print(f'\t\t\tCurrent operation: making dependencies for create indexes...')
+    #     trigger_drops = re.findall('drop\s+trigger\s+\S+\s*;?', migration_data)
+    #     for drop_trigger_str in trigger_drops:
+    #         dropped_trigger_name = drop_trigger_str.split()[2]
+    #         if dropped_trigger_name not in self.created_triggers_info:
+    #             migration_warnings.append(
+    #                 f'Trigger "{dropped_trigger_name}" is not created in any migration')
+    #             continue
+    #         self.search_suitable_trigger_creation(indexing_table, migration_db, indexing_columns,
+    #                                               f'Table "{indexing_table}" with columns ({", ".join(indexing_columns)}) '
+    #                                               f'to indexing is not created in any migration',
+    #                                               dependencies, migration_warnings)
 
     def prepare_migration_folders(self):
         for blueprint_name in self.get_blueprint_names():
@@ -459,6 +491,10 @@ class Migration:
                     self.make_create_index_dependencies(migration_data, migration_db, migration_dependencies,
                                                         migration_blueprint=blueprint_name,
                                                         migration_creations_dict_key=migration_creations_dict_key)
+                    self.make_create_trigger_dependencies(migration_data, migration_db, migration_dependencies,
+                                                          migration_blueprint=blueprint_name,
+                                                          migration_creations_dict_key=migration_creations_dict_key)
+                    make_drop_trigger_dependencies
 
 
                     # TODO: то же самое, только с ALTER_TABLE
