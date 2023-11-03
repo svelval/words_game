@@ -456,8 +456,8 @@ class Migration:
                                                                  migration, migration_db_folder, columns=index_columns)
 
                         migration_triggers_creations = [match.group() for match in
-                                                        re.finditer('create\s+trigger\s+(if\s+not\s+exists)?\s+\S+\s'
-                                                                    '(before|after)\s+(create|update|delete)\s+on\s+\S+\s+',
+                                                        re.finditer('create\s+trigger\s+(if\s+not\s+exists\s+)?\S+\s+'
+                                                                    '(before|after)\s+(insert|update|delete)\s+on\s+\S+\s+',
                                                                     migration_data)]
                         for trigger_creation in migration_triggers_creations:
                             trigger_creation_split = trigger_creation.split()
