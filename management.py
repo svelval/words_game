@@ -460,13 +460,10 @@ class Migration:
                                                                     '(before|after)\s+(insert|update|delete)\s+on\s+\S+\s+',
                                                                     migration_data)]
                         for trigger_creation in migration_triggers_creations:
-                            trigger_creation_split = trigger_creation.split()
-                            if re.search('if\s+not\s+exists', trigger_creation_split[2]) is not None:
-                                trigger_name = trigger_creation_split[3]
-                                trigger_table = trigger_creation_split[6]
-                            else:
-                                trigger_name = trigger_creation_split[2]
-                                trigger_table = trigger_creation_split[5]
+                            clear_trigger_info = re.sub('(if\s+not\s+exists\s+)|((before|after)\s+(insert|update|delete))',
+                                                        '', trigger_creation)
+                            trigger_name = clear_trigger_info.split()[2]
+                            trigger_table = clear_trigger_info.split()[4]
                             self.__add_index_or_trigger_creation('trigger', trigger_name, blueprint_name, trigger_table,
                                                                  migration, migration_db_folder)
             except FileNotFoundError:
