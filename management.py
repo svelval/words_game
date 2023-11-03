@@ -374,21 +374,21 @@ class Migration:
                                                 f'Trigger "{trigger_name}" on table "{trigger_table}" is not created '
                                                 f'in any migration',
                                                 dependencies, migration_warnings, table_blueprint=migration_blueprint)
-    #
-    # @__make_dependencies
-    # def make_drop_trigger_dependencies(self, migration_data, migration_db, dependencies, migration_warnings):
-    #     print(f'\t\t\tCurrent operation: making dependencies for create indexes...')
-    #     trigger_drops = re.findall('drop\s+trigger\s+\S+\s*;?', migration_data)
-    #     for drop_trigger_str in trigger_drops:
-    #         dropped_trigger_name = drop_trigger_str.split()[2]
-    #         if dropped_trigger_name not in self.created_triggers_info:
-    #             migration_warnings.append(
-    #                 f'Trigger "{dropped_trigger_name}" is not created in any migration')
-    #             continue
-    #         self.search_suitable_trigger_creation(indexing_table, migration_db, indexing_columns,
-    #                                               f'Table "{indexing_table}" with columns ({", ".join(indexing_columns)}) '
-    #                                               f'to indexing is not created in any migration',
-    #                                               dependencies, migration_warnings)
+
+    @__make_dependencies
+    def make_drop_trigger_dependencies(self, migration_data, migration_db, dependencies, migration_warnings,
+                                       migration_blueprint):
+        print(f'\t\t\tCurrent operation: making dependencies for dropped triggers...')
+        trigger_drops = [stmt.replace(';', ' ') for stmt in re.findall('drop\s+trigger\s+\S+\s*;?', migration_data)]
+        for drop_trigger_str in trigger_drops:
+            dropped_trigger_name = drop_trigger_str.split()[2]
+            if dropped_trigger_name not in self.created_triggers_info:
+                migration_warnings.append(
+                    f'Trigger "{dropped_trigger_name}" is not created in any migration')
+                continue
+            self.search_suitable_trigger_creation(dropped_trigger_name, migration_db, migration_blueprint,
+                                                  f'Trigger "{dropped_trigger_name}" is not created in any migration',
+                                                  dependencies, migration_warnings)
 
     def prepare_migration_folders(self):
         for blueprint_name in self.get_blueprint_names():
@@ -501,8 +501,8 @@ class Migration:
                     self.make_create_trigger_dependencies(migration_data, migration_db, migration_dependencies,
                                                           migration_blueprint=blueprint_name,
                                                           migration_creations_dict_key=migration_creations_dict_key)
-                    make_drop_trigger_dependencies
-
+                    self.make_drop_trigger_dependencies(migration_data, migration_db, migration_dependencies,
+                                                        migration_blueprint=blueprint_name)
 
                     # TODO: то же самое, только с ALTER_TABLE
                     if migration_dependencies:
