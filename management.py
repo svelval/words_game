@@ -333,8 +333,8 @@ class Migration:
                                                 f'columns ({", ".join(columns_to_edit)}) is not created in any migration',
                                                 dependencies, migration_warnings, table_cols=columns_to_edit,
                                                 table_blueprint=migration_blueprint)
-            if indexes_to_edit:
-                self.search_suitable_index_creation(altering_table, migration_db,
+            for index in indexes_to_edit:
+                self.search_suitable_index_creation(index, migration_db, altering_table,
                                                     f'Altering table "{altering_table}" with '
                                                     f'indexes ({", ".join(indexes_to_edit)})'
                                                     f' is not created in any migration',
