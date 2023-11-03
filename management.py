@@ -67,6 +67,8 @@ class Migration:
     def __prepare_migration_data(migration_data):
         migration_data = re.sub('\(\s*', '(', migration_data.lower().replace('\n', ''))
         migration_data = re.sub('["\'`]', '', migration_data)
+        migration_data = re.sub('[()]', lambda match: ' (' if match.group() == '(' else ') ', migration_data)
+        migration_data = re.sub('\)\s+;', ');', migration_data)
         return re.sub('\s*\)', ')', migration_data)
 
     def __create_migrations_db_table(self):
