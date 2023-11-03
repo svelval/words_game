@@ -289,7 +289,7 @@ class Migration:
     @__make_dependencies
     def make_foreign_keys_dependencies(self, migration_data, migration_db, dependencies, migration_warnings):
         print(f'\t\t\tCurrent operation: making dependencies for foreign keys...')
-        foreign_keys = re.findall('foreign key\s*\S*\s*\(.*\) references .*', migration_data)
+        foreign_keys = re.findall('foreign\s+key\s+\S+\s*\(.*\)\s+references\s+\S+\s*\(\S+\)', migration_data)
         foreign_keys_split = [foreign_key.split() for foreign_key in foreign_keys]
         for foreign_key_info in foreign_keys_split:
             if '(' not in foreign_key_info[2]:
