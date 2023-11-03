@@ -315,7 +315,7 @@ class Migration:
     def make_alter_table_dependencies(self, migration_data, migration_db, dependencies,
                                       migration_warnings, migration_blueprint):
         print(f'\t\t\tCurrent operation: making dependencies for alter tables...')
-        alters_tables = re.findall('alter\s+table\s+.*;?', migration_data)
+        alters_tables = [stmt.replace(';', ' ') for stmt in re.findall('alter\s+table\s+.*;?', migration_data)]
         for alter_table_str in alters_tables:
             altering_table = alter_table_str.split()[2]
             if altering_table not in self.created_tables_info:
@@ -326,8 +326,8 @@ class Migration:
             columns_to_edit = [re.split('\s+column\s+', stmt)[-1].split()[0] for stmt in
                                re.split(',\s*', alter_table_body)
                                if 'column' in stmt]
-            indexes_to_edit = [stmt.split('index')[-1].split()[0] for stmt in re.finditer('\s+index\s+\S+\s*[,;]?',
-                                                                                          alter_table_body)]
+            indexes_to_edit = [re.sub('[,;]', ' ', stmt.group()).split('index')[-1].split()[0] for stmt in
+                               re.finditer('\s+index\s+\S+\s*[,;]?', alter_table_body)]
             self.search_suitable_table_creation(altering_table, migration_db,
                                                 f'Altering table "{altering_table}" with '
                                                 f'columns ({", ".join(columns_to_edit)}) is not created in any migration',
