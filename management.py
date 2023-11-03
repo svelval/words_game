@@ -346,7 +346,8 @@ class Migration:
         print(f'\t\t\tCurrent operation: making dependencies for create indexes...')
         if migration_creations_dict_key not in self.migrations_creations:
             return
-        for index_name, index_table, index_columns in zip(*(self.migrations_creations[migration_creations_dict_key].values()[:3])):
+        migration_indexes_creations = list(self.migrations_creations[migration_creations_dict_key].values())[:3]
+        for index_name, index_table, index_columns in zip(*migration_indexes_creations):
             if index_table not in self.created_tables_info:
                 migration_warnings.append(
                     f'Indexing table "{index_table}" is not created in any migration')
@@ -363,7 +364,8 @@ class Migration:
         print(f'\t\t\tCurrent operation: making dependencies for create triggers...')
         if migration_creations_dict_key not in self.migrations_creations:
             return
-        for trigger_name, trigger_table in zip(*(self.migrations_creations[migration_creations_dict_key].values()[3:])):
+        migration_triggers_creations = list(self.migrations_creations[migration_creations_dict_key].values())[3:]
+        for trigger_name, trigger_table in zip(*migration_triggers_creations):
             if trigger_table not in self.created_tables_info:
                 migration_warnings.append(
                     f'Table "{trigger_table}" inside "{trigger_name}" trigger is not created in any migration')
