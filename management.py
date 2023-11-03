@@ -240,8 +240,8 @@ class Migration:
                             migration=migration, migration_db_folder=migration_db_folder, columns=columns,
                             creation_dict=creation_dict)
 
-    def __search_suitable_creation(self, table, table_db, warning, migration_dependencies, migration_warnings,
-                                   table_blueprint=..., table_cols=..., find_creation_in=...):
+    def __search_suitable_creation(self, obj_of_creation, obj_db, warning, migration_dependencies, migration_warnings,
+                                   table_name=..., table_blueprint=..., table_cols=..., find_creation_in=...):
         if not isinstance(find_creation_in, dict):
             find_creation_in = self.created_tables_info
         if not isinstance(table_cols, (str, list)):
@@ -252,10 +252,11 @@ class Migration:
         try:
             related_creations = list(
                 map(lambda creation_info: creation_info
-                if creation_info['db'] == table_db and
+                if creation_info['db'] == obj_db and
                    ((table_blueprint is Ellipsis) or (creation_info['blueprint'] == table_blueprint)) and
+                   ((table_name is Ellipsis) or (creation_info['table'] == table_name)) and
                    all(table_col in creation_info['columns'] for table_col in table_cols) else None,
-                    find_creation_in[table])
+                    find_creation_in[obj_of_creation])
             )
         except KeyError:
             return
@@ -274,14 +275,16 @@ class Migration:
         self.__search_suitable_creation(table, table_db, warning, migration_dependencies, migration_warnings,
                                         table_blueprint=table_blueprint, table_cols=table_cols)
 
-    def search_suitable_index_creation(self, table, table_db, warning, migration_dependencies,
+    def search_suitable_index_creation(self, index, index_db, index_table, warning, migration_dependencies,
                                        migration_warnings, table_blueprint):
-        self.__search_suitable_creation(table, table_db, warning, migration_dependencies, migration_warnings,
-                                        table_blueprint=table_blueprint, find_creation_in=self.created_indexes_info)
+        self.__search_suitable_creation(index, index_db, warning, migration_dependencies, migration_warnings,
+                                        table_name=index_table, table_blueprint=table_blueprint,
+                                        find_creation_in=self.created_indexes_info)
 
-    # def search_suitable_trigger_creation(self, table, table_db, warning, migration_dependencies, migration_warnings):
-    #     self.__search_suitable_creation(table, table_db, warning, migration_dependencies, migration_warnings,
-    #                                     find_creation_in=self.created_triggers_info)
+    def search_suitable_trigger_creation(self, trigger, trigger_db, blueprint, warning, migration_dependencies,
+                                         migration_warnings):
+        self.__search_suitable_creation(trigger, trigger_db, warning, migration_dependencies, migration_warnings,
+                                        table_blueprint=blueprint, find_creation_in=self.created_triggers_info)
 
     @__make_dependencies
     def make_foreign_keys_dependencies(self, migration_data, migration_db, dependencies, migration_warnings):
