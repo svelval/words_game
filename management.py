@@ -230,7 +230,7 @@ class Migration:
             creation_dict = self.created_indexes_info
             if columns is not Ellipsis:
                 self.migrations_creations[migration_path]['index_names'].append(index_of_trigger_name)
-                self.migrations_creations[migration_path]['index_names'].append(table_name)
+                self.migrations_creations[migration_path]['index_tables'].append(table_name)
                 self.migrations_creations[migration_path]['index_columns'].append(columns)
         else:
             creation_dict = self.created_triggers_info
